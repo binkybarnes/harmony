@@ -1,24 +1,39 @@
-use dotenv;
+use rocket_db_pools::Database;
 
 #[macro_use]
 extern crate rocket;
 
 mod controllers;
+mod database;
+mod models;
 mod routes;
 
+// #[derive(Database)]
+// #[database("harmony_db")]
+// struct HarmonyDb(sqlx::PgPool);
+
+struct Name(String);
+
 #[get("/")]
-fn index() -> &'static str {
+async fn index() -> &'static str {
     "bingus"
 }
 
 #[launch]
 fn rocket() -> _ {
-    dotenv::from_filename("../.env").ok();
-    let port: u16 = dotenv::var("PORT")
-        .expect("set PORT in .env")
-        .parse::<u16>()
-        .unwrap();
-    print!("{}", port);
-    // rocket::build().mount("/", routes![index])
+    use validator::Validate;
+    let x = models::UserSignupInput {
+        email: "bruh",
+        username: "stink",
+        password: "aomg",
+        confirm_password: "jfdsjfids",
+    };
+    match x.validate() {
+        Ok(_) => println!("Validation passed."),
+        Err(e) => println!("Validation failed: {:?}", e),
+    }
+    print!("AAAAAAA{}", x.email);
     routes::build()
+        .attach(database::HarmonyDb::init())
+        .mount("/", routes![index])
 }
