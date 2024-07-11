@@ -117,6 +117,7 @@ dependencies = [
  "rocket_db_pools",
  "serde",
  "sqlx",
+ "thiserror",
  "validator",
 ]
 
