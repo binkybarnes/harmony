@@ -2,9 +2,10 @@ pub mod auth_routes {
     use crate::database;
     use crate::models;
     use rocket::http::Status;
+    use rocket::response::status;
     use rocket::serde::{json::Json, Deserialize, Serialize};
     use rocket::{
-        response::{self, status, Debug, Responder},
+        response::{self, status::Created, Debug, Responder},
         Request,
     };
     use rocket_db_pools::Connection;
@@ -55,39 +56,57 @@ pub mod auth_routes {
     pub async fn signup(
         user: Json<models::UserSignupInput<'_>>,
         mut db: Connection<database::HarmonyDb>,
-    ) -> CustomResponse {
+    ) -> impl Responder {
         // json input:
         // email, username, password, confirmPassword
         // json inserted:
-        // email, username, password, profilePicture
-        // json returned: id
-        // match user.validate() {
-        //     Ok(_) => (),
-        //     Err(e) => return CustomResponse::BadRequest(String::from("failed JSON validation")),
-        // };
-        match user.validate() {
-            Ok(_) => (),
-            Err(_) => return CustomResponse::BadRequest(String::from("failed JSON validation")),
-        }
+        // email, username, password, profile_picture
+        // json returned:
+        // id, username, profile_picture
+
+        user.validate()
+            .map_err(|_| (Status::BadRequest, "failed JSON validation"))?;
 
         if user.confirm_password != user.password {
-            return CustomResponse::BadRequest(String::from("Passwords do not match"));
+            return Err((Status::BadRequest, "passwords do not match"));
         }
 
+        let username_exists = sqlx::query!(
+            "SELECT * FROM user_info 
+            WHERE username = $1",
+            user.username
+        )
+        .fetch_optional(&mut **db)
+        .await
+        .map_err(|_| (Status::BadRequest, "database insertion failed"))?;
+
+        if username_exists.is_some() {
+            return Err((Status::BadRequest, "username already exists"));
+        }
+
+        let profile_picture = format!(
+            "https://avatar.iran.liara.run/public/boy?username={0}",
+            user.username
+        );
+
         let result = sqlx::query!(
-            "INSERT INTO user_info (email, username, password) VALUES ($1, $2, $3) RETURNING id",
+            "INSERT INTO user_info (email, username, password, profilepicture) 
+            VALUES ($1, $2, $3, $4) RETURNING id",
             user.email,
             user.username,
             user.password,
+            profile_picture,
         )
         .fetch_one(&mut **db)
-        .await;
+        .await
+        .map_err(|_| (Status::InternalServerError, "database insertion failed"))?;
 
-        // Ok(Json(result.id))
-        match result {
-            Ok(r) => CustomResponse::Approved(Json(r.id)),
-            Err(e) => CustomResponse::InternalServerError(String::from("Database error")),
-        }
+        let response = Json(models::SignupResponse {
+            id: result.id,
+            username: user.username.to_string(),
+            profile_picture: profile_picture,
+        });
+        Ok(status::Created::new("/signup").body(response))
     }
 
     #[post("/login")]

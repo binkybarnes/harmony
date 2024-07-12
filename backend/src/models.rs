@@ -1,5 +1,5 @@
 // use rocket::serde::{json::Json, Deserialize, Serialize};
-use rocket::serde::Deserialize;
+use rocket::serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
 
 #[derive(Deserialize, Validate)]
@@ -13,4 +13,11 @@ pub struct UserSignupInput<'r> {
     pub password: &'r str,
     #[validate(length(min = 1, max = 20))]
     pub confirm_password: &'r str,
+}
+
+#[derive(Serialize)]
+pub struct SignupResponse {
+    pub id: i64,
+    pub username: String,
+    pub profile_picture: String,
 }
