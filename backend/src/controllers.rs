@@ -9,8 +9,14 @@ pub mod auth_routes {
         Request,
     };
     use rocket_db_pools::Connection;
-    use thiserror::Error;
     use validator::{Validate, ValidationErrors};
+
+    use argon2::{
+        password_hash::{
+            rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
+        },
+        Argon2,
+    };
 
     // type Result<T, E = CustomError> = std::result::Result<T, E>;
 
@@ -42,15 +48,17 @@ pub mod auth_routes {
     //     }
     // }
 
-    #[derive(Responder)]
-    pub enum CustomResponse {
-        #[response(status = 200, content_type = "json")]
-        Approved(Json<i64>),
-        #[response(status = 400, content_type = "json")]
-        BadRequest(String),
-        #[response(status = 500, content_type = "json")]
-        InternalServerError(String),
-    }
+    // #[derive(Responder)]
+    // pub enum CustomResponse {
+    //     #[response(status = 200, content_type = "json")]
+    //     Approved(Json<i64>),
+    //     #[response(status = 400, content_type = "json")]
+    //     BadRequest(String),
+    //     #[response(status = 500, content_type = "json")]
+    //     InternalServerError(String),
+    // }
+
+    // pub enum CustomError {}
 
     #[post("/signup", format = "json", data = "<user>")]
     pub async fn signup(
@@ -78,11 +86,22 @@ pub mod auth_routes {
         )
         .fetch_optional(&mut **db)
         .await
-        .map_err(|_| (Status::BadRequest, "database insertion failed"))?;
+        .map_err(|_| (Status::BadRequest, "database error"))?;
 
         if username_exists.is_some() {
             return Err((Status::BadRequest, "username already exists"));
         }
+
+        // HASH PASSWORD
+        let password = user.password.as_bytes();
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = argon2
+            .hash_password(password, &salt)
+            .map_err(|_| (Status::InternalServerError, "could not hash password"))?
+            .to_string();
+
+        // verify with https://docs.rs/argon2/latest/argon2/
 
         let profile_picture = format!(
             "https://avatar.iran.liara.run/public/boy?username={0}",
@@ -90,11 +109,12 @@ pub mod auth_routes {
         );
 
         let result = sqlx::query!(
-            "INSERT INTO user_info (email, username, password, profilepicture) 
-            VALUES ($1, $2, $3, $4) RETURNING id",
+            "INSERT INTO user_info (email, username, display_username, hashed_password, profile_picture)
+            VALUES ($1, $2, $3, $4, $5) RETURNING id",
             user.email,
+            user.username.to_lowercase(),
             user.username,
-            user.password,
+            password_hash,
             profile_picture,
         )
         .fetch_one(&mut **db)
