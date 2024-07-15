@@ -8,6 +8,8 @@ mod database;
 mod models;
 mod routes;
 
+mod utils;
+
 // #[derive(Database)]
 // #[database("harmony_db")]
 // struct HarmonyDb(sqlx::PgPool);
