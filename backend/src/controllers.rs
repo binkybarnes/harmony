@@ -1,7 +1,9 @@
 pub mod auth_routes {
     use crate::database;
     use crate::models;
-    use rocket::http::Status;
+    use crate::utils::generate_token;
+    use crate::utils::generate_token::generate_token_set_cookie;
+    use rocket::http::{Cookie, CookieJar, Status};
     use rocket::response::status;
     use rocket::serde::{json::Json, Deserialize, Serialize};
     use rocket::{
@@ -61,10 +63,11 @@ pub mod auth_routes {
     // pub enum CustomError {}
 
     #[post("/signup", format = "json", data = "<user>")]
-    pub async fn signup(
+    pub async fn signup<'a>(
         user: Json<models::UserSignupInput<'_>>,
         mut db: Connection<database::HarmonyDb>,
-    ) -> impl Responder {
+        jar: &'a CookieJar<'_>,
+    ) -> impl Responder<'a, 'a> {
         // json input:
         // email, username, password, confirmPassword
         // json inserted:
@@ -82,7 +85,7 @@ pub mod auth_routes {
         let username_exists = sqlx::query!(
             "SELECT * FROM user_info 
             WHERE username = $1",
-            user.username
+            user.username.to_lowercase()
         )
         .fetch_optional(&mut **db)
         .await
@@ -121,10 +124,14 @@ pub mod auth_routes {
         .await
         .map_err(|_| (Status::InternalServerError, "database insertion failed"))?;
 
+        // switch out jwt for redis
+        let token = generate_token_set_cookie(result.id);
+        jar.add(Cookie::build(("JWT", token)).path("/"));
+
         let response = Json(models::SignupResponse {
             id: result.id,
             username: user.username.to_string(),
-            profile_picture: profile_picture,
+            profile_picture,
         });
         Ok(status::Created::new("/signup").body(response))
     }
