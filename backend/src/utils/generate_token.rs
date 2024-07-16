@@ -1,3 +1,4 @@
+use cookie::{time::Duration, Cookie};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use rocket::serde::{Deserialize, Serialize};
 
@@ -8,8 +9,7 @@ struct Claims {
     exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
 }
 
-pub fn generate_token_set_cookie(user_id: i64) -> String {
-    dotenv::from_filename("../.env").ok();
+pub fn generate_token_set_cookie(user_id: i64) -> Cookie<'static> {
     let secret: String = dotenv::var("JWT_SECRET").expect("set JWT_SECRET in .env");
 
     let iat = chrono::Utc::now();
@@ -28,5 +28,12 @@ pub fn generate_token_set_cookie(user_id: i64) -> String {
     )
     .expect("failed token generation");
 
-    token
+    Cookie::build(("JWT", token))
+        .path("/")
+        .max_age(Duration::hours(12))
+        .secure(dotenv::var("RUST_ENV").expect("set RUST_ENV") != "development")
+        .http_only(true)
+        .same_site(cookie::SameSite::Strict)
+        .build()
+        .into_owned()
 }

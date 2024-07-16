@@ -12,6 +12,7 @@ regex = "1.10.5"
 argon2 = "0.5.3"
 jsonwebtoken = "9"
 chrono = "0.4.38"
+cookie = "0.18.1"
 
 [dependencies.rocket]
 version = "0.5.1"
