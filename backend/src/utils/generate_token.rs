@@ -9,7 +9,7 @@ struct Claims {
     exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
 }
 
-pub fn generate_token_set_cookie(user_id: i64) -> Cookie<'static> {
+pub fn jwt_cookie(user_id: i64) -> Cookie<'static> {
     let secret: String = dotenv::var("JWT_SECRET").expect("set JWT_SECRET in .env");
 
     let iat = chrono::Utc::now();

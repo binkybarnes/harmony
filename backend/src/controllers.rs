@@ -1,8 +1,8 @@
 pub mod auth_routes {
     use crate::database;
     use crate::models;
+
     use crate::utils::generate_token;
-    use crate::utils::generate_token::generate_token_set_cookie;
     use rocket::http::{Cookie, CookieJar, Status};
     use rocket::response::status;
     use rocket::response::status::BadRequest;
@@ -125,8 +125,7 @@ pub mod auth_routes {
         .await
         .map_err(|_| (Status::InternalServerError, "database insertion failed"))?;
 
-        // switch out jwt for redis
-        let cookie = generate_token_set_cookie(result.id);
+        let cookie = generate_token::jwt_cookie(result.id);
         jar.add(cookie);
 
         let response = Json(models::SignupResponse {
@@ -138,12 +137,13 @@ pub mod auth_routes {
     }
 
     #[post("/login", format = "json", data = "<user>")]
-    pub async fn login(
+    pub async fn login<'a>(
         user: Json<models::UserLoginInput<'_>>,
         mut db: Connection<database::HarmonyDb>,
-    ) -> impl Responder {
+        jar: &'a CookieJar<'_>,
+    ) -> impl Responder<'a, 'a> {
         let user_exists = sqlx::query!(
-            "SELECT hashed_password FROM user_info 
+            "SELECT * FROM user_info 
             WHERE username = $1",
             user.username.to_lowercase()
         )
@@ -152,10 +152,8 @@ pub mod auth_routes {
         .map_err(|_| (Status::BadRequest, "database error"))?;
 
         // check password correct
-        if user_exists.is_none() {
-            return Err((Status::BadRequest, "Username doesn't exist"));
-        } else {
-            let password = &user_exists.unwrap().hashed_password;
+        if let Some(record) = &user_exists {
+            let password = &record.hashed_password;
             let parsed_hash = PasswordHash::new(password)
                 .map_err(|_| (Status::InternalServerError, "could not parse hash"))?;
             if Argon2::default()
@@ -164,7 +162,12 @@ pub mod auth_routes {
             {
                 return Err((Status::BadRequest, "Password incorrect"));
             }
+        } else {
+            return Err((Status::BadRequest, "Username doesn't exist"));
         }
+
+        let cookie = generate_token::jwt_cookie(user_exists.as_ref().unwrap().id);
+        jar.add(cookie);
 
         print!("bingus!");
 
