@@ -26,3 +26,9 @@ pub struct SignupResponse {
     pub username: String,
     pub profile_picture: String,
 }
+
+#[derive(Deserialize)]
+pub struct UserLoginInput<'r> {
+    pub username: &'r str,
+    pub password: &'r str,
+}

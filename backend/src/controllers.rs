@@ -5,6 +5,7 @@ pub mod auth_routes {
     use crate::utils::generate_token::generate_token_set_cookie;
     use rocket::http::{Cookie, CookieJar, Status};
     use rocket::response::status;
+    use rocket::response::status::BadRequest;
     use rocket::serde::{json::Json, Deserialize, Serialize};
     use rocket::{
         response::{self, status::Created, Debug, Responder},
@@ -125,8 +126,8 @@ pub mod auth_routes {
         .map_err(|_| (Status::InternalServerError, "database insertion failed"))?;
 
         // switch out jwt for redis
-        let token = generate_token_set_cookie(result.id);
-        jar.add(Cookie::build(("JWT", token)).path("/"));
+        let cookie = generate_token_set_cookie(result.id);
+        jar.add(cookie);
 
         let response = Json(models::SignupResponse {
             id: result.id,
@@ -136,9 +137,38 @@ pub mod auth_routes {
         Ok(status::Created::new("/signup").body(response))
     }
 
-    #[post("/login")]
-    pub fn login() {
+    #[post("/login", format = "json", data = "<user>")]
+    pub async fn login(
+        user: Json<models::UserLoginInput<'_>>,
+        mut db: Connection<database::HarmonyDb>,
+    ) -> impl Responder {
+        let user_exists = sqlx::query!(
+            "SELECT hashed_password FROM user_info 
+            WHERE username = $1",
+            user.username.to_lowercase()
+        )
+        .fetch_optional(&mut **db)
+        .await
+        .map_err(|_| (Status::BadRequest, "database error"))?;
+
+        // check password correct
+        if user_exists.is_none() {
+            return Err((Status::BadRequest, "Username doesn't exist"));
+        } else {
+            let password = &user_exists.unwrap().hashed_password;
+            let parsed_hash = PasswordHash::new(password)
+                .map_err(|_| (Status::InternalServerError, "could not parse hash"))?;
+            if Argon2::default()
+                .verify_password(user.password.as_bytes(), &parsed_hash)
+                .is_err()
+            {
+                return Err((Status::BadRequest, "Password incorrect"));
+            }
+        }
+
         print!("bingus!");
+
+        Ok(())
     }
 
     #[post("/logout")]

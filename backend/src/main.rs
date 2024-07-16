@@ -14,8 +14,6 @@ mod utils;
 // #[database("harmony_db")]
 // struct HarmonyDb(sqlx::PgPool);
 
-struct Name(String);
-
 #[get("/")]
 async fn index() -> &'static str {
     "bingus"
@@ -23,18 +21,7 @@ async fn index() -> &'static str {
 
 #[launch]
 fn rocket() -> _ {
-    use validator::Validate;
-    let x = models::UserSignupInput {
-        email: "bruh",
-        username: "stink",
-        password: "aomg",
-        confirm_password: "jfdsjfids",
-    };
-    match x.validate() {
-        Ok(_) => println!("Validation passed."),
-        Err(e) => println!("Validation failed: {:?}", e),
-    }
-    print!("AAAAAAA{}", x.email);
+    let _ = dotenv::dotenv().ok();
     routes::build()
         .attach(database::HarmonyDb::init())
         .mount("/", routes![index])

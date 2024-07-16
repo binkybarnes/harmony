@@ -2,7 +2,6 @@ use crate::controllers;
 use rocket::{Build, Rocket};
 
 pub fn build() -> Rocket<Build> {
-    dotenv::from_filename("../.env").ok();
     let port: u16 = dotenv::var("ROCKET_PORT")
         .expect("set PORT in .env")
         .parse::<u16>()
