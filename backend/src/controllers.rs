@@ -84,7 +84,7 @@ pub mod auth_routes {
         }
 
         let username_exists = sqlx::query!(
-            "SELECT * FROM user_info 
+            "SELECT * FROM users 
             WHERE username = $1",
             user.username.to_lowercase()
         )
@@ -113,8 +113,8 @@ pub mod auth_routes {
         );
 
         let result = sqlx::query!(
-            "INSERT INTO user_info (email, username, display_username, hashed_password, profile_picture)
-            VALUES ($1, $2, $3, $4, $5) RETURNING id",
+            "INSERT INTO users (email, username, display_username, hashed_password, profile_picture)
+            VALUES ($1, $2, $3, $4, $5) RETURNING user_id",
             user.email,
             user.username.to_lowercase(),
             user.username,
@@ -125,11 +125,11 @@ pub mod auth_routes {
         .await
         .map_err(|_| (Status::InternalServerError, "database insertion failed"))?;
 
-        let cookie = generate_token::jwt_cookie(result.id);
+        let cookie = generate_token::jwt_cookie(result.user_id.into());
         jar.add(cookie);
 
-        let response = Json(models::SignupResponse {
-            id: result.id,
+        let response = Json(models::DefaultResponse {
+            id: result.user_id,
             username: user.username.to_string(),
             profile_picture,
         });
@@ -143,7 +143,7 @@ pub mod auth_routes {
         jar: &'a CookieJar<'_>,
     ) -> impl Responder<'a, 'a> {
         let user_exists = sqlx::query!(
-            "SELECT * FROM user_info 
+            "SELECT * FROM users 
             WHERE username = $1",
             user.username.to_lowercase()
         )
@@ -151,31 +151,36 @@ pub mod auth_routes {
         .await
         .map_err(|_| (Status::BadRequest, "database error"))?;
 
+        let record = match user_exists {
+            Some(record) => record,
+            None => return Err((Status::BadRequest, "Username doesn't exist")),
+        };
         // check password correct
-        if let Some(record) = &user_exists {
-            let password = &record.hashed_password;
-            let parsed_hash = PasswordHash::new(password)
-                .map_err(|_| (Status::InternalServerError, "could not parse hash"))?;
-            if Argon2::default()
-                .verify_password(user.password.as_bytes(), &parsed_hash)
-                .is_err()
-            {
-                return Err((Status::BadRequest, "Password incorrect"));
-            }
-        } else {
-            return Err((Status::BadRequest, "Username doesn't exist"));
+        let parsed_hash = PasswordHash::new(&record.hashed_password)
+            .map_err(|_| (Status::InternalServerError, "could not parse hash"))?;
+        if Argon2::default()
+            .verify_password(user.password.as_bytes(), &parsed_hash)
+            .is_err()
+        {
+            return Err((Status::BadRequest, "Password incorrect"));
         }
 
-        let cookie = generate_token::jwt_cookie(user_exists.as_ref().unwrap().id);
+        let cookie = generate_token::jwt_cookie(record.user_id.into());
         jar.add(cookie);
 
-        print!("bingus!");
+        let response = Json(models::DefaultResponse {
+            id: record.user_id,
+            username: record.username,
+            profile_picture: record.profile_picture.unwrap_or_default(),
+        });
 
-        Ok(())
+        Ok(response)
     }
 
     #[post("/logout")]
-    pub fn logout() {
-        print!("bingus!");
+    pub fn logout(jar: &CookieJar<'_>) -> String {
+        jar.remove("JWT");
+
+        "logged out successfully".to_string()
     }
 }
