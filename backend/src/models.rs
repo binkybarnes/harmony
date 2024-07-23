@@ -21,8 +21,8 @@ pub struct UserSignupInput<'r> {
 }
 
 #[derive(Serialize)]
-pub struct SignupResponse {
-    pub id: i64,
+pub struct DefaultResponse {
+    pub id: i32,
     pub username: String,
     pub profile_picture: String,
 }
@@ -31,4 +31,9 @@ pub struct SignupResponse {
 pub struct UserLoginInput<'r> {
     pub username: &'r str,
     pub password: &'r str,
+}
+
+#[derive(Serialize)]
+pub struct ErrorResponse {
+    error: String,
 }
