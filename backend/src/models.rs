@@ -22,7 +22,7 @@ pub struct UserSignupInput<'r> {
 
 #[derive(Serialize)]
 pub struct DefaultResponse {
-    pub id: i32,
+    pub user_id: i32,
     pub username: String,
     pub profile_picture: String,
 }

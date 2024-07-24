@@ -3,11 +3,11 @@ use rocket_db_pools::Database;
 #[macro_use]
 extern crate rocket;
 
-mod controllers;
 mod database;
 mod models;
 mod routes;
 
+mod controllers;
 mod utils;
 
 // #[derive(Database)]

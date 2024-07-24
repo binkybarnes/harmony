@@ -1,4 +1,5 @@
 use crate::controllers;
+
 use rocket::{Build, Rocket};
 
 pub fn build() -> Rocket<Build> {
@@ -18,3 +19,12 @@ pub fn build() -> Rocket<Build> {
             ],
         )
 }
+
+// .mount(
+//     "/api/messages",
+//     routes![
+//         controllers::message_routes::signup,
+//         controllers::auth_routes::login,
+//         controllers::auth_routes::logout
+//     ],
+// )
