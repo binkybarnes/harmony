@@ -3,7 +3,7 @@ use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Outcome, Request};
-pub struct JwtGuard(models::Claims);
+pub struct JwtGuard(pub models::Claims);
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for JwtGuard {
