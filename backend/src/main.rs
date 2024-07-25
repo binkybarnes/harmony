@@ -8,6 +8,7 @@ mod models;
 mod routes;
 
 mod controllers;
+mod middleware;
 mod utils;
 
 // #[derive(Database)]

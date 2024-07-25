@@ -20,13 +20,6 @@ pub struct UserSignupInput<'r> {
     pub confirm_password: &'r str,
 }
 
-#[derive(Serialize)]
-pub struct DefaultResponse {
-    pub user_id: i32,
-    pub username: String,
-    pub profile_picture: String,
-}
-
 #[derive(Deserialize)]
 pub struct UserLoginInput<'r> {
     pub username: &'r str,
@@ -34,6 +27,20 @@ pub struct UserLoginInput<'r> {
 }
 
 #[derive(Serialize)]
-pub struct ErrorResponse {
-    error: String,
+pub struct DefaultResponse {
+    pub user_id: i32,
+    pub username: String,
+    pub profile_picture: String,
+}
+
+// #[derive(Serialize)]
+// pub struct ErrorResponse {
+//     error: String,
+// }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub user_id: i64,
+    pub iat: usize, // Optional. Issued at (as UTC timestamp)
+    pub exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
 }

@@ -18,6 +18,10 @@ pub fn build() -> Rocket<Build> {
                 controllers::auth_routes::logout
             ],
         )
+        .mount(
+            "/api/messages",
+            routes![controllers::message_routes::send_message],
+        )
 }
 
 // .mount(
