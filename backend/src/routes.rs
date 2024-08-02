@@ -20,7 +20,10 @@ pub fn build() -> Rocket<Build> {
         )
         .mount(
             "/api/messages",
-            routes![controllers::message_routes::send_message],
+            routes![
+                controllers::message_routes::send_message,
+                // controllers::message_routes::get_messages
+            ],
         )
 }
 
