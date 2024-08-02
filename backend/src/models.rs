@@ -46,14 +46,19 @@ pub struct Claims {
 }
 
 #[derive(Deserialize)]
-pub struct MessageInput<'r> {
+pub struct SendMessageInput<'r> {
     pub channel_id: i32,
     pub message: &'r str,
 }
 
 #[derive(Serialize)]
-pub struct MessageResponse<'r> {
+pub struct SendMessageResponse<'r> {
     pub user_id: i32,
     pub channel_id: i32,
     pub message: &'r str,
+}
+
+#[derive(Deserialize)]
+pub struct GetMessagesInput {
+    pub channel_id: i32,
 }
