@@ -9,14 +9,14 @@ use rocket::serde::{Deserialize, Serialize};
 //     exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
 // }
 
-pub fn jwt_cookie(user_id: i64) -> Cookie<'static> {
+pub fn jwt_cookie(user_id: i32) -> Cookie<'static> {
     let secret: String = dotenv::var("JWT_SECRET").expect("set JWT_SECRET in .env");
 
     let iat = chrono::Utc::now();
     let exp = iat + chrono::Duration::hours(12);
 
     let claims = models::Claims {
-        user_id,
+        sub: user_id,
         iat: iat.timestamp() as usize,
         exp: exp.timestamp() as usize,
     };

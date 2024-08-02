@@ -27,7 +27,7 @@ pub struct UserLoginInput<'r> {
 }
 
 #[derive(Serialize)]
-pub struct DefaultResponse {
+pub struct AuthResponse {
     pub user_id: i32,
     pub username: String,
     pub profile_picture: String,
@@ -40,7 +40,20 @@ pub struct DefaultResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub user_id: i64,
+    pub sub: i32,
     pub iat: usize, // Optional. Issued at (as UTC timestamp)
     pub exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
+}
+
+#[derive(Deserialize)]
+pub struct MessageInput<'r> {
+    pub channel_id: i32,
+    pub message: &'r str,
+}
+
+#[derive(Serialize)]
+pub struct MessageResponse<'r> {
+    pub user_id: i32,
+    pub channel_id: i32,
+    pub message: &'r str,
 }

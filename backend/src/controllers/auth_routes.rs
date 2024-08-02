@@ -80,8 +80,8 @@ pub async fn signup<'a>(
         return Err((Status::BadRequest, "passwords do not match"));
     }
 
-    let username_exists = sqlx::query!(
-        "SELECT * FROM users 
+    let username_exists = sqlx::query_scalar!(
+        "SELECT 1 FROM users 
         WHERE username = $1",
         user.username.to_lowercase()
     )
@@ -109,7 +109,7 @@ pub async fn signup<'a>(
         user.username
     );
 
-    let result = sqlx::query!(
+    let user_id = sqlx::query_scalar!(
         "INSERT INTO users (email, username, display_username, hashed_password, profile_picture)
         VALUES ($1, $2, $3, $4, $5) RETURNING user_id",
         user.email,
@@ -122,11 +122,11 @@ pub async fn signup<'a>(
     .await
     .map_err(|_| (Status::InternalServerError, "database insertion failed"))?;
 
-    let cookie = generate_token::jwt_cookie(result.user_id.into());
+    let cookie = generate_token::jwt_cookie(user_id);
     jar.add(cookie);
 
-    let response = Json(models::DefaultResponse {
-        user_id: result.user_id,
+    let response = Json(models::AuthResponse {
+        user_id,
         username: user.username.to_string(),
         profile_picture,
     });
@@ -162,10 +162,10 @@ pub async fn login<'a>(
         return Err((Status::BadRequest, "Password incorrect"));
     }
 
-    let cookie = generate_token::jwt_cookie(record.user_id.into());
+    let cookie = generate_token::jwt_cookie(record.user_id);
     jar.add(cookie);
 
-    let response = Json(models::DefaultResponse {
+    let response = Json(models::AuthResponse {
         user_id: record.user_id,
         username: record.username,
         profile_picture: record.profile_picture.unwrap_or_default(),
