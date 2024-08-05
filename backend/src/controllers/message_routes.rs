@@ -18,50 +18,28 @@ pub async fn send_message(
     let user_id = &guard.0.sub;
     let channel_id = message.channel_id;
     // check if user is in the server that has the channel the message is being sent to
-
     user_in_server(&mut db, channel_id, *user_id).await?;
 
-    // let server_id = sqlx::query_scalar!(
-    //     "SELECT server_id FROM channels WHERE channel_id = $1",
-    //     message.channel_id
-    // )
-    // .fetch_optional(&mut **db)
-    // .await
-    // .map_err(|_| (Status::BadRequest, "database error"))?
-    // .ok_or((Status::NotFound, "channel not found"))?;
-
-    // sqlx::query_scalar!(
-    //     "SELECT 1 FROM users_servers WHERE user_id = $1 AND server_id = $2",
-    //     user_id,
-    //     server_id
-    // )
-    // .fetch_optional(&mut **db)
-    // .await
-    // .map_err(|_| (Status::BadRequest, "database error"))?
-    // .ok_or((Status::Forbidden, "user not in server"))?;
-
-    // if user_in_server.is_none() {
-    //     return Err((Status::Forbidden, "user not in server"));
-    // }
-
-    sqlx::query!(
+    let message = sqlx::query_as!(
+        models::Message,
         "INSERT INTO messages (user_id, channel_id, message)
-        VALUES ($1, $2, $3)",
+        VALUES ($1, $2, $3)
+        RETURNING *",
         user_id,
         message.channel_id,
         message.message
     )
-    .execute(&mut **db)
+    .fetch_one(&mut **db)
     .await
     .map_err(|_| (Status::BadRequest, "database error"))?;
 
-    let response = Json(models::SendMessageResponse {
-        user_id: *user_id,
-        channel_id: message.channel_id,
-        message: message.message,
-    });
+    // let response = Json(models::SendMessageResponse {
+    //     user_id: *user_id,
+    //     channel_id: message.channel_id,
+    //     message: message.message,
+    // });
 
-    Ok::<_, (Status, &str)>(status::Created::new("/send").body(response))
+    Ok::<_, (Status, &str)>(status::Created::new("/send").body(Json(message)))
 }
 
 // gets all messages from a channel
