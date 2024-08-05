@@ -5,6 +5,8 @@ use rocket::serde::{Deserialize, Serialize};
 
 use validator::{Validate, ValidationError};
 
+use chrono::{DateTime, Utc};
+
 static ALPHA_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9_ඞ]+$").unwrap());
 
 #[derive(Deserialize, Validate)]
@@ -61,4 +63,13 @@ pub struct SendMessageResponse<'r> {
 #[derive(Deserialize)]
 pub struct GetMessagesInput {
     pub channel_id: i32,
+}
+
+#[derive(Serialize)]
+pub struct Message {
+    pub message_id: i64,
+    pub user_id: i32,
+    pub channel_id: i32,
+    pub message: String,
+    pub timestamp: DateTime<Utc>,
 }

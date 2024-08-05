@@ -22,7 +22,7 @@ pub fn build() -> Rocket<Build> {
             "/api/messages",
             routes![
                 controllers::message_routes::send_message,
-                // controllers::message_routes::get_messages
+                controllers::message_routes::get_messages
             ],
         )
 }
