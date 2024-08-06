@@ -53,13 +53,6 @@ pub struct SendMessageInput<'r> {
     pub message: &'r str,
 }
 
-#[derive(Serialize)]
-pub struct SendMessageResponse<'r> {
-    pub user_id: i32,
-    pub channel_id: i32,
-    pub message: &'r str,
-}
-
 #[derive(Deserialize)]
 pub struct GetMessagesInput {
     pub channel_id: i32,
@@ -72,4 +65,24 @@ pub struct Message {
     pub channel_id: i32,
     pub message: String,
     pub timestamp: DateTime<Utc>,
+}
+
+// #[derive(Deserialize)]
+// pub struct GetServersInput<'r> {
+//     pub server_type: &'r str,
+// }
+
+#[derive(sqlx::Type, Deserialize, Serialize)]
+#[sqlx(type_name = "server_type", rename_all = "lowercase")]
+pub enum ServerType {
+    Dm,
+    GroupChat,
+    Server,
+}
+
+#[derive(Serialize)]
+pub struct Server {
+    pub server_id: i32,
+    pub server_type: ServerType,
+    pub members: i32,
 }
