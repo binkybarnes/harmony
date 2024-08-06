@@ -1,22 +1,19 @@
 use crate::middleware::protect_route::JwtGuard;
 use crate::{database, models};
-use rocket::http::hyper::server;
 use rocket::http::Status;
-use rocket::response::status;
 use rocket::response::Responder;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket_db_pools::Connection;
 
 // get servers with server_type = sever for user for sidebar
 #[get("/get/<server_type>")]
-pub async fn get_servers<'a>(
+pub async fn get_servers(
     guard: JwtGuard,
     server_type: &str,
     mut db: Connection<database::HarmonyDb>,
-) -> impl Responder<'a, 'a> {
+) -> impl Responder {
     let user_id = &guard.0.sub;
 
-    println!("server type {}", server_type);
     let server_type_enum = match server_type.to_lowercase().as_str() {
         "server" => models::ServerType::Server,
         "dm" => models::ServerType::Dm,
@@ -37,10 +34,6 @@ pub async fn get_servers<'a>(
     .fetch_all(&mut **db)
     .await
     .map_err(|_| (Status::BadRequest, "database error"))?;
-
-    if servers.is_empty() {
-        return Err((Status::NotFound, "no servers found for the given criteria"));
-    }
 
     Ok(Json(servers))
 }
