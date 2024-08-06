@@ -90,7 +90,7 @@ pub struct Server {
 
 #[derive(Serialize)]
 pub struct Channel {
-    channel_id: i32,
-    server_id: i32,
-    channel_name: String,
+    pub channel_id: i32,
+    pub server_id: i32,
+    pub channel_name: String,
 }

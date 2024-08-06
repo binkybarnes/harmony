@@ -29,6 +29,10 @@ pub fn build() -> Rocket<Build> {
             "/api/servers",
             routes![controllers::server_routes::get_servers],
         )
+        .mount(
+            "/api/channels",
+            routes![controllers::channel_routes::get_channels],
+        )
 }
 
 // .mount(
