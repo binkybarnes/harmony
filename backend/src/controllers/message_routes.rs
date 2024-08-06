@@ -33,24 +33,17 @@ pub async fn send_message(
     .await
     .map_err(|_| (Status::BadRequest, "database error"))?;
 
-    // let response = Json(models::SendMessageResponse {
-    //     user_id: *user_id,
-    //     channel_id: message.channel_id,
-    //     message: message.message,
-    // });
-
     Ok::<_, (Status, &str)>(status::Created::new("/send").body(Json(message)))
 }
 
 // gets all messages from a channel
-#[get("/get", format = "json", data = "<channel>")]
+#[get("/get/<channel_id>")]
 pub async fn get_messages(
     guard: JwtGuard,
-    channel: Json<models::GetMessagesInput>,
+    channel_id: i32,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<models::Message>>, (Status, &'static str)> {
     // check if channel exists
-    let channel_id = channel.channel_id;
     let user_id = &guard.0.sub;
 
     user_in_server(&mut db, channel_id, *user_id).await?;
