@@ -5,7 +5,7 @@ use rocket::serde::{Deserialize, Serialize};
 
 use validator::{Validate, ValidationError};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 
 static ALPHA_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9_ඞ]+$").unwrap());
 
@@ -29,10 +29,11 @@ pub struct UserLoginInput<'r> {
 }
 
 #[derive(Serialize)]
-pub struct AuthResponse {
+pub struct User {
     pub user_id: i32,
-    pub username: String,
+    pub display_username: String,
     pub profile_picture: String,
+    pub date_joined: NaiveDate,
 }
 
 // #[derive(Serialize)]
@@ -85,4 +86,11 @@ pub struct Server {
     pub server_id: i32,
     pub server_type: ServerType,
     pub members: i32,
+}
+
+#[derive(Serialize)]
+pub struct Channel {
+    channel_id: i32,
+    server_id: i32,
+    channel_name: String,
 }
