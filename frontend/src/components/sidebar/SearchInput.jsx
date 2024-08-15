@@ -1,6 +1,6 @@
 const SearchInput = () => {
   return (
-    <form>
+    <form className="px-2 pt-2">
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3">
           <svg
@@ -22,7 +22,7 @@ const SearchInput = () => {
         <input
           type="text"
           placeholder="Search..."
-          className="input input-bordered h-10 w-full rounded-md pe-10"
+          className="input h-10 w-full rounded-md pe-10"
         />
       </div>
     </form>
