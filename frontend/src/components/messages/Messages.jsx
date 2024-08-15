@@ -2,7 +2,7 @@ import Message from "./Message";
 
 const Messages = () => {
   return (
-    <div className="flex-1 overflow-auto rounded-md bg-cyan-400">
+    <div className="scrollbar-messages flex-1 overflow-y-scroll rounded-md bg-cyan-400 pb-4">
       <Message />
       <Message />
       <Message />

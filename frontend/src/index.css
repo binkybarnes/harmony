@@ -2,19 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .conditional-padding {
-    /* padding-right: calc(100vw - 100%); */
-  }
+body {
+  overscroll-behavior-y: none;
+}
 
+@layer utilities {
   @supports selector(::-webkit-scrollbar) {
     /* get rid of daisyui's scrollbar-color */
     * {
       scrollbar-color: initial !important;
     }
 
-    .scrollbar::-webkit-scrollbar {
+    .scrollbar-conversations::-webkit-scrollbar {
       width: 8px;
+    }
+    .scrollbar-conversations::-webkit-scrollbar-thumb {
+      background: purple;
+    }
+    .scrollbar-conversations::-webkit-scrollbar-track {
+      background: orange;
     }
 
     .scrollbar::-webkit-scrollbar-track {
@@ -33,11 +39,20 @@
     }
   }
 
-  /* no custom scrollbar support? REMOVE IT */
+  /* no custom scrollbar support*/
   @supports not selector(::-webkit-scrollbar) {
-    * {
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none; /* Firefox */
+    .scrollbar-conversations {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+
+    .scrollbar-conversations:hover {
+      scrollbar-color: red blue;
+    }
+
+    .scrollbar-messages {
+      scrollbar-width: auto;
+      scrollbar-color: red blue;
     }
   }
 }
