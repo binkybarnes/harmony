@@ -1,6 +1,6 @@
 const Profilebar = () => {
   return (
-    <div className="mx-2 mb-2 flex items-center justify-between rounded-md bg-base-100 p-1.5">
+    <div className="mx-2 flex items-center justify-between rounded-md bg-base-100 p-1.5">
       <div className="flex min-w-0 items-center gap-2">
         <div className="avatar">
           <div className="w-10 rounded-md">
