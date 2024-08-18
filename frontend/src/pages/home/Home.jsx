@@ -36,13 +36,13 @@ const Home = () => {
   return (
     <div className="flex overflow-hidden">
       <Serverbar onServerHover={handleServerHover} />
-      {/* <Sidebar /> */}
-      {/* <MessageContainer /> */}
+      <Sidebar />
+      <MessageContainer />
 
       <CSSTransition
         in={tooltip.visible}
         nodeRef={nodeRef}
-        timeout={300}
+        timeout={75}
         classNames="server-tooltip"
         unmountOnExit
       >

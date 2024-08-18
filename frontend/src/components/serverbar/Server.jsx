@@ -14,10 +14,10 @@ const Server = ({ name, onHover }) => {
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="relative mb-2 h-[48px] w-[48px]"
+      className="group mb-2 h-[48px] w-[48px]"
     >
       <div className="avatar">
-        <div className="rounded-md object-contain">
+        <div className="rounded-md object-contain transition-all duration-200 group-hover:rounded-[2rem]">
           <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
         </div>
       </div>
