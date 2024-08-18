@@ -6,7 +6,46 @@ body {
   overscroll-behavior-y: none;
 }
 
+.server-tooltip-enter {
+  opacity: 0;
+}
+.server-tooltip-enter-active {
+  opacity: 1;
+  transition: opacity 300ms;
+}
+.server-tooltip-exit {
+  opacity: 1;
+  transition: opacity 300ms;
+}
+.server-tooltip-exit-active {
+  opacity: 0;
+}
+
 @layer utilities {
+  .server-tooltip {
+    position: absolute;
+    border-radius: 0.375rem;
+    background-color: brown;
+    padding-block: 0.25rem;
+    padding-inline: 0.5rem;
+    color: white;
+    max-width: 11rem;
+    transform: translateY(-50%);
+    font-weight: 500;
+  }
+
+  .server-tooltip::before {
+    content: "";
+    position: absolute;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: brown;
+    top: 50%;
+    left: -0.25rem;
+    transform: translateY(-50%) rotate(45deg);
+    border-radius: 0.05rem;
+  }
+
   @supports selector(::-webkit-scrollbar) {
     /* get rid of daisyui's scrollbar-color */
     * {
