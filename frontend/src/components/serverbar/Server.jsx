@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useTooltip } from "./TooltipContext";
+import { useTooltip } from "./tooltip/TooltipContext";
 
 const Server = ({ name }) => {
   const { handleServerHover } = useTooltip();
