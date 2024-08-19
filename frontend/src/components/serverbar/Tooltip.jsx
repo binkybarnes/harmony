@@ -1,26 +1,33 @@
-import PropTypes from "prop-types";
-import { forwardRef } from "react";
-
-const Tooltip = forwardRef(({ name, position }, ref) => {
+import { useTooltip } from "./TooltipContext";
+import { CSSTransition } from "react-transition-group";
+import { useRef } from "react";
+const Tooltip = () => {
+  const nodeRef = useRef(null);
+  const { tooltip } = useTooltip();
+  const { name, position } = tooltip;
   return (
-    <div
-      ref={ref}
-      style={{
-        top: `${position.top + position.height / 2}px`,
-        left: `${position.left + 25}px`,
-      }}
-      className="server-tooltip"
+    // need to move CSSTransition in here so it can use useContext
+    <CSSTransition
+      in={tooltip.visible}
+      nodeRef={nodeRef}
+      timeout={75}
+      classNames="server-tooltip"
+      unmountOnExit
     >
-      {name}
-    </div>
+      <div
+        ref={nodeRef}
+        style={{
+          top: `${position.top + position.height / 2}px`,
+          left: `${position.left + 25}px`,
+        }}
+        className="server-tooltip"
+      >
+        {name}
+      </div>
+    </CSSTransition>
   );
-});
-
-Tooltip.displayName = "Tooltip";
-
-Tooltip.propTypes = {
-  name: PropTypes.string,
-  position: PropTypes.object,
 };
+
+// Tooltip.displayName = "Tooltip";
 
 export default Tooltip;

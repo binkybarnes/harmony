@@ -40,6 +40,7 @@ body {
     max-width: 11rem;
     transform: translateY(-50%);
     font-weight: 500;
+    z-index: 500;
   }
 
   .server-tooltip::before {

@@ -1,13 +1,15 @@
 import PropTypes from "prop-types";
+import { useTooltip } from "./TooltipContext";
 
-const Server = ({ name, onHover }) => {
+const Server = ({ name }) => {
+  const { handleServerHover } = useTooltip();
   const handleMouseEnter = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    onHover(true, name, rect);
+    handleServerHover(true, name, rect);
   };
 
   const handleMouseLeave = () => {
-    onHover(false, "", null);
+    handleServerHover(false, "", {});
   };
 
   return (
@@ -17,7 +19,7 @@ const Server = ({ name, onHover }) => {
       className="group mb-2 h-[48px] w-[48px]"
     >
       <div className="avatar">
-        <div className="rounded-md object-contain transition-all duration-200 group-hover:rounded-[2rem]">
+        <div className="rounded-md object-contain transition-all duration-200 group-hover:rounded-[1.2rem]">
           <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
         </div>
       </div>
@@ -27,7 +29,6 @@ const Server = ({ name, onHover }) => {
 
 Server.propTypes = {
   name: PropTypes.string,
-  onHover: PropTypes.func,
 };
 
 export default Server;

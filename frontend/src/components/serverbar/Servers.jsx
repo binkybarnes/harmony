@@ -1,7 +1,6 @@
 import Server from "./Server";
-import PropTypes from "prop-types";
 
-const Servers = ({ onServerHover }) => {
+const Servers = () => {
   const servers = [
     { id: 1, name: "Server 1" },
     { id: 2, name: "Server 2" },
@@ -26,14 +25,10 @@ const Servers = ({ onServerHover }) => {
   return (
     <div className="flex-1 overflow-y-scroll scrollbar-none">
       {servers.map((server) => (
-        <Server key={server.id} name={server.name} onHover={onServerHover} />
+        <Server key={server.id} name={server.name} />
       ))}
     </div>
   );
-};
-
-Servers.propTypes = {
-  onServerHover: PropTypes.func,
 };
 
 export default Servers;
