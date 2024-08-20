@@ -1,7 +1,7 @@
 const Message = () => {
   return (
     <div className="relative mt-4 rounded-md pl-16">
-      <div className="avatar absolute left-4">
+      <div className="avatar absolute left-4 select-none">
         <div className="w-10 rounded-md object-contain">
           <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
         </div>

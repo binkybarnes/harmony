@@ -5,9 +5,10 @@ import Signup from "./pages/signup/Signup";
 function App() {
   return (
     <div>
-      {/* <Home /> */}
+      <Home />
+
       {/* <Signup /> */}
-      <Login />
+      {/* <Login /> */}
     </div>
   );
 }
