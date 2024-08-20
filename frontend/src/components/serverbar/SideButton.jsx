@@ -14,7 +14,7 @@ const SideButton = ({ name, children }) => {
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="h-12 w-12 rounded-md bg-yellow-300 p-0.5 transition-all duration-200 hover:rounded-[1.2rem]"
+      className="h-12 w-12 rounded-md bg-yellow-300 p-0.5 transition-all duration-200 hover:cursor-pointer hover:rounded-[1.2rem] active:translate-y-[2px]"
     >
       {children}
     </div>

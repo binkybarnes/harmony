@@ -19,7 +19,7 @@ const Server = ({ name }) => {
       className="group mb-2 h-[48px] w-[48px]"
     >
       <div className="avatar">
-        <div className="rounded-md object-contain transition-all duration-200 group-hover:rounded-[1.2rem]">
+        <div className="rounded-md object-contain transition-all duration-200 group-hover:cursor-pointer group-hover:rounded-[1.2rem] group-active:translate-y-[1.5px]">
           <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
         </div>
       </div>

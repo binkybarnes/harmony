@@ -10,7 +10,7 @@ const Profilebar = () => {
         <p className="truncate font-medium">Your username fsdojfdsfodsj</p>
       </div>
       <svg
-        className="h-6 w-6 hover:text-neutral-300 active:text-neutral-200"
+        className="h-6 w-6 hover:cursor-pointer hover:text-neutral-300 active:text-neutral-200"
         aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"

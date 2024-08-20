@@ -5,6 +5,10 @@
 body {
   overscroll-behavior-y: none;
 }
+textarea:focus,
+input:focus {
+  outline: none;
+}
 
 .server-tooltip-enter {
   opacity: 0;
