@@ -1,17 +1,17 @@
 import { createContext, useState, useContext } from "react";
 import PropTypes from "prop-types";
 
-const TooltipContext = createContext();
+const PopupContext = createContext();
 
-const TooltipProvider = ({ children }) => {
-  const [tooltip, setTooltip] = useState({
+const PopupProvider = ({ children }) => {
+  const [serverTooltip, setServerTooltip] = useState({
     visible: false,
     name: "",
     position: {},
   });
 
   const handleServerHover = (isHovered, name, position) => {
-    setTooltip({
+    setServerTooltip({
       visible: isHovered,
       name: name,
       position: {
@@ -23,20 +23,18 @@ const TooltipProvider = ({ children }) => {
   };
 
   return (
-    <TooltipContext.Provider value={{ tooltip, handleServerHover }}>
+    <PopupContext.Provider value={{ serverTooltip, handleServerHover }}>
       {children}
-    </TooltipContext.Provider>
+    </PopupContext.Provider>
   );
 };
 
-TooltipProvider.propTypes = {
+PopupProvider.propTypes = {
   children: PropTypes.array,
 };
 
-// Custom hook to use the TooltipContext
-// const useTooltip = () => useContext(TooltipContext);
-const useTooltip = () => {
-  const tooltip = useContext(TooltipContext);
+const usePopupContext = () => {
+  const tooltip = useContext(PopupContext);
   return tooltip;
 };
-export { TooltipProvider, useTooltip };
+export { PopupProvider, usePopupContext };

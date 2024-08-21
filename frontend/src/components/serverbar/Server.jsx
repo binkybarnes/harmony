@@ -1,15 +1,15 @@
 import PropTypes from "prop-types";
-import { useTooltip } from "./tooltip/TooltipContext";
+import { usePopupContext } from "../popupContext/PopupContext";
 
 const Server = ({ name }) => {
-  const { handleServerHover } = useTooltip();
+  const { handleServerHover } = usePopupContext();
   const handleMouseEnter = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     handleServerHover(true, name, rect);
   };
 
   const handleMouseLeave = () => {
-    handleServerHover(false, "", {});
+    handleServerHover(false, name, {});
   };
 
   return (
@@ -23,6 +23,7 @@ const Server = ({ name }) => {
           <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
         </div>
       </div>
+      <div className="absolute left-12 z-50 h-20 w-20 bg-purple-400">FFFFF</div>
     </div>
   );
 };

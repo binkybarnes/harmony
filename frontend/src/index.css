@@ -16,14 +16,14 @@ input:focus {
 }
 .server-tooltip-enter-active {
   opacity: 1;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(1);
   transition:
     opacity 75ms,
     transform 75ms;
 }
 .server-tooltip-exit {
   opacity: 1;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(1);
 }
 .server-tooltip-exit-active {
   opacity: 0;

@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
-import { useTooltip } from "./tooltip/TooltipContext";
+import { usePopupContext } from "../popupContext/PopupContext";
 const SideButton = ({ name, children }) => {
-  const { handleServerHover } = useTooltip();
+  const { handleServerHover } = usePopupContext();
   const handleMouseEnter = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     handleServerHover(true, name, rect);

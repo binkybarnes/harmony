@@ -6,7 +6,7 @@ const Toolbar = () => {
           <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
         </div>
       </div>
-      <p className="truncate font-medium text-neutral-200">Username</p>
+      <p className="truncate font-semibold text-neutral-200">Username</p>
     </div>
   );
 };
