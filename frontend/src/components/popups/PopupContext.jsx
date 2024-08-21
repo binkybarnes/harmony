@@ -9,7 +9,6 @@ const PopupProvider = ({ children }) => {
     name: "",
     position: {},
   });
-
   const handleServerHover = (isHovered, name, position) => {
     setServerTooltip({
       visible: isHovered,
@@ -22,8 +21,24 @@ const PopupProvider = ({ children }) => {
     });
   };
 
+  const [serverDropdown, setServerDropdown] = useState({
+    visible: false,
+  });
+  const handleServerDropdownClick = () => {
+    setServerDropdown((prev) => ({
+      visible: !prev.visible,
+    }));
+  };
+
   return (
-    <PopupContext.Provider value={{ serverTooltip, handleServerHover }}>
+    <PopupContext.Provider
+      value={{
+        serverTooltip,
+        handleServerHover,
+        serverDropdown,
+        handleServerDropdownClick,
+      }}
+    >
       {children}
     </PopupContext.Provider>
   );

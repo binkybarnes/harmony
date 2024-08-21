@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { usePopupContext } from "../popupContext/PopupContext";
+import { usePopupContext } from "../popups/PopupContext";
 const SideButton = ({ name, children }) => {
   const { handleServerHover } = usePopupContext();
   const handleMouseEnter = (e) => {

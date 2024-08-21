@@ -1,7 +1,7 @@
 import { usePopupContext } from "../PopupContext";
 import { CSSTransition } from "react-transition-group";
 import { useRef } from "react";
-const Tooltip = () => {
+const ServerTooltip = () => {
   const nodeRef = useRef(null);
   const { serverTooltip } = usePopupContext();
   const { name, position } = serverTooltip;
@@ -30,4 +30,4 @@ const Tooltip = () => {
 
 // Tooltip.displayName = "Tooltip";
 
-export default Tooltip;
+export default ServerTooltip;

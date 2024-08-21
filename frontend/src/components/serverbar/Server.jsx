@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { usePopupContext } from "../popupContext/PopupContext";
+import { usePopupContext } from "../popups/PopupContext";
 
 const Server = ({ name }) => {
   const { handleServerHover } = usePopupContext();
