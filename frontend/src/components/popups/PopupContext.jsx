@@ -23,10 +23,13 @@ const PopupProvider = ({ children }) => {
 
   const [serverDropdown, setServerDropdown] = useState({
     visible: false,
+    ref: null,
   });
-  const handleServerDropdownClick = () => {
+
+  const toggleServerDropdown = () => {
     setServerDropdown((prev) => ({
-      visible: !prev.visible,
+      ...prev,
+      visible: !serverDropdown.visible,
     }));
   };
 
@@ -36,7 +39,7 @@ const PopupProvider = ({ children }) => {
         serverTooltip,
         handleServerHover,
         serverDropdown,
-        handleServerDropdownClick,
+        toggleServerDropdown,
       }}
     >
       {children}

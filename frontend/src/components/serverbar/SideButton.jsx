@@ -7,7 +7,7 @@ const SideButton = ({ name, children }) => {
     handleServerHover(true, name, rect);
   };
   const handleMouseLeave = () => {
-    handleServerHover(false, "", {});
+    handleServerHover(false, name, {});
   };
 
   return (

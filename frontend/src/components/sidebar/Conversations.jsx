@@ -1,7 +1,7 @@
 import Conversation from "./Conversation";
 const Conversations = () => {
   return (
-    <nav className="scrollbar-conversations flex-1 overflow-y-scroll pl-2">
+    <nav className="scrollbar-sidebar flex-1 overflow-y-scroll pl-2">
       <Conversation />
       <Conversation />
       <Conversation />

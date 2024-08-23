@@ -12,7 +12,7 @@ const Serverbar = () => {
       <div className="h-[2px] w-[36px] rounded-[1px] bg-emerald-400"></div>
       <Servers />
 
-      <SideButton name="Add a Server">
+      <SideButton name="Join a Server">
         <IoIosAddCircleOutline size="100%" color="red" />
       </SideButton>
     </div>

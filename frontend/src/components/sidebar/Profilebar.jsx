@@ -1,3 +1,4 @@
+import { VscSignOut } from "react-icons/vsc";
 const Profilebar = () => {
   return (
     <div className="mx-2 flex items-center justify-between rounded-md bg-base-100 p-1.5">
@@ -9,21 +10,10 @@ const Profilebar = () => {
         </div>
         <p className="truncate font-medium">Your username fsdojfdsfodsj</p>
       </div>
-      <svg
-        className="h-6 w-6 hover:cursor-pointer hover:text-neutral-300 active:text-neutral-200"
-        aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"
-        />
-      </svg>
+      <VscSignOut
+        className="flex-shrink-0 hover:text-neutral-300 active:text-neutral-200"
+        size="20px"
+      />
     </div>
   );
 };
