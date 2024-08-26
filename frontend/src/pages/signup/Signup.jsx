@@ -20,7 +20,6 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(inputs);
     await signup(inputs);
   };
 
@@ -49,8 +48,11 @@ const Signup = () => {
             header="CONFIRM PASSWORD"
           />
 
-          <button className="mt-12 h-10 w-full rounded-md bg-neutral-700 font-semibold hover:brightness-95 active:brightness-90">
-            Signup
+          <button
+            disabled={loading}
+            className="mt-12 h-10 w-full rounded-md bg-neutral-700 font-semibold hover:brightness-95 active:brightness-90"
+          >
+            {loading ? <span className="loading loading-spinner" /> : "Signup"}
           </button>
           <Link
             to={"/login"}

@@ -3,8 +3,6 @@ use crate::models;
 
 use crate::utils::{generate_token, json_error::json_error};
 use rocket::http::{Cookie, CookieJar, Status};
-use rocket::response::status;
-use rocket::response::status::BadRequest;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket::{
     response::{self, status::Created, Debug, Responder},
@@ -131,7 +129,8 @@ pub async fn signup<'a>(
     let cookie = generate_token::jwt_cookie(user_response.user_id);
     jar.add(cookie);
 
-    Ok(status::Created::new("/signup").body(Json(user_response)))
+    // Ok(status::Created::new("/signup").body(Json(user_response)))
+    Ok((Status::Created, Json(user_response)))
 }
 
 #[post("/login", format = "json", data = "<user>")]
@@ -185,8 +184,9 @@ pub async fn login<'a>(
 }
 
 #[post("/logout")]
-pub fn logout(jar: &CookieJar<'_>) -> String {
+pub fn logout(jar: &CookieJar<'_>) -> Status {
     jar.remove("JWT");
 
-    "logged out successfully".to_string()
+    // "logged out successfully".to_string()
+    Status::NoContent
 }

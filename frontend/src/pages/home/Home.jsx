@@ -12,9 +12,9 @@ const Home = () => {
       <PopupProvider>
         <Serverbar />
 
-        <DiscoverServers />
-        {/* <Sidebar />
-        <MessageContainer /> */}
+        {/* <DiscoverServers /> */}
+        <Sidebar />
+        <MessageContainer />
 
         <div className="select-none">
           <ServerTooltip />

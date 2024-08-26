@@ -48,11 +48,10 @@ const PopupProvider = ({ children }) => {
 };
 
 PopupProvider.propTypes = {
-  children: PropTypes.array,
+  children: PropTypes.oneOfType([PropTypes.array, PropTypes.element]),
 };
 
 const usePopupContext = () => {
-  const tooltip = useContext(PopupContext);
-  return tooltip;
+  return useContext(PopupContext);
 };
 export { PopupProvider, usePopupContext };
