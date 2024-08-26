@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Field from "../../components/SignupField/Field";
 
 const Login = () => {
@@ -12,6 +13,12 @@ const Login = () => {
           <button className="mt-12 h-10 w-full rounded-md bg-neutral-700 font-semibold hover:brightness-95 active:brightness-90">
             Login
           </button>
+          <Link
+            to={"/signup"}
+            className="mt-2 text-sm text-cyan-500 hover:cursor-pointer hover:underline"
+          >
+            {"Don't"} have an account?
+          </Link>
         </div>
       </form>
     </div>

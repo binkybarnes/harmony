@@ -1,22 +1,63 @@
+import { Link } from "react-router-dom";
 import Field from "../../components/SignupField/Field";
+import { useState } from "react";
+import useSignup from "../../hooks/useSignup";
 
 const Signup = () => {
+  const [inputs, setInputs] = useState({
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const { loading, signup } = useSignup();
+
+  const handleOnChange = (e) => {
+    const { name, value } = e.target;
+    setInputs((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log(inputs);
+    await signup(inputs);
+  };
+
   return (
     <div className="flex h-screen items-center justify-center overflow-hidden bg-neutral">
-      <form className="w-[480px] select-none rounded-md bg-neutral-800 p-8 text-center text-neutral-200">
+      <form
+        onSubmit={handleSubmit}
+        className="w-[480px] select-none rounded-md bg-neutral-800 p-8 text-center text-neutral-200"
+      >
         <h1 className="text-2xl font-semibold">Create an account</h1>
         <div className="text-left">
-          <Field name="EMAIL" />
-          <Field name="USERNAME" />
-          <Field name="PASSWORD" />
-          <Field name="CONFIRM PASSWORD" />
+          <Field handleOnChange={handleOnChange} name="email" header="EMAIL" />
+          <Field
+            handleOnChange={handleOnChange}
+            name="username"
+            header="USERNAME"
+          />
+          <Field
+            handleOnChange={handleOnChange}
+            name="password"
+            header="PASSWORD"
+          />
+          <Field
+            handleOnChange={handleOnChange}
+            name="confirmPassword"
+            header="CONFIRM PASSWORD"
+          />
 
           <button className="mt-12 h-10 w-full rounded-md bg-neutral-700 font-semibold hover:brightness-95 active:brightness-90">
             Signup
           </button>
-          <p className="mt-2 text-sm text-cyan-500 hover:cursor-pointer hover:underline">
+          <Link
+            to={"/login"}
+            className="mt-2 text-sm text-cyan-500 hover:cursor-pointer hover:underline"
+          >
             Already have an account?
-          </p>
+          </Link>
         </div>
       </form>
     </div>

@@ -1,5 +1,9 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::{database, models};
+use crate::utils::json_error::json_error;
+use crate::{
+    database,
+    models::{self, ErrorResponse},
+};
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::serde::{json::Json, Deserialize, Serialize};
@@ -18,7 +22,7 @@ pub async fn get_servers(
         "server" => models::ServerType::Server,
         "dm" => models::ServerType::Dm,
         "groupchat" => models::ServerType::GroupChat,
-        _ => return Err((Status::BadRequest, "invalid server type")),
+        _ => return Err((Status::BadRequest, json_error("invalid server type"))),
     };
 
     let servers = sqlx::query_as!(
@@ -33,7 +37,7 @@ pub async fn get_servers(
     )
     .fetch_all(&mut **db)
     .await
-    .map_err(|_| (Status::BadRequest, "database error"))?;
+    .map_err(|_| (Status::BadRequest, json_error("database error")))?;
 
     Ok(Json(servers))
 }

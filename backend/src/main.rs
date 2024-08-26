@@ -1,3 +1,4 @@
+use middleware::cors;
 use rocket_db_pools::Database;
 
 #[macro_use]
@@ -25,5 +26,6 @@ fn rocket() -> _ {
     let _ = dotenv::dotenv().ok();
     routes::build()
         .attach(database::HarmonyDb::init())
+        .attach(cors::Cors)
         .mount("/", routes![index])
 }

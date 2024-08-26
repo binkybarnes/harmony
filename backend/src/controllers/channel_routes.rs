@@ -1,5 +1,10 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::{database, models, utils};
+use crate::utils::json_error::json_error;
+use crate::{
+    database,
+    models::{self, ErrorResponse},
+    utils,
+};
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::serde::{json::Json, Deserialize, Serialize};
@@ -13,7 +18,7 @@ pub async fn get_channels(
     guard: JwtGuard,
     server_id: i32,
     mut db: Connection<database::HarmonyDb>,
-) -> Result<Json<Vec<models::Channel>>, (Status, &'static str)> {
+) -> Result<Json<Vec<models::Channel>>, (Status, Json<ErrorResponse>)> {
     let user_id = &guard.0.sub;
 
     let server_checker = ByServer { server_id };
@@ -27,7 +32,7 @@ pub async fn get_channels(
     )
     .fetch_all(&mut **db)
     .await
-    .map_err(|_| (Status::BadRequest, "database error"))?;
+    .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
 
-    Ok::<_, (Status, &str)>(Json(channels))
+    Ok::<_, (Status, Json<ErrorResponse>)>(Json(channels))
 }

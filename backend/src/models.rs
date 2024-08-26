@@ -7,6 +7,11 @@ use validator::{Validate, ValidationError};
 
 use chrono::{DateTime, NaiveDate, Utc};
 
+#[derive(Serialize)]
+pub struct ErrorResponse {
+    pub error: String,
+}
+
 static ALPHA_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9_ඞ]+$").unwrap());
 
 #[derive(Deserialize, Validate)]
@@ -19,7 +24,7 @@ pub struct UserSignupInput<'r> {
     #[validate(length(min = 1, max = 20))]
     pub password: &'r str,
     #[validate(length(min = 1, max = 20))]
-    pub confirm_password: &'r str,
+    pub confirmPassword: &'r str,
 }
 
 #[derive(Deserialize)]

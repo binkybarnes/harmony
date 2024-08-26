@@ -1,5 +1,7 @@
-use crate::database;
+use crate::utils::json_error::json_error;
+use crate::{database, models::ErrorResponse};
 use rocket::http::Status;
+use rocket::serde::json::Json;
 use rocket_db_pools::Connection;
 
 pub trait UserMembershipChecker {
@@ -7,7 +9,7 @@ pub trait UserMembershipChecker {
         &self,
         db: &mut Connection<database::HarmonyDb>,
         user_id: i32,
-    ) -> Result<(), (Status, &'static str)>;
+    ) -> Result<(), (Status, Json<ErrorResponse>)>;
 }
 
 pub struct ByChannel {
@@ -23,7 +25,7 @@ impl UserMembershipChecker for ByChannel {
         &self,
         db: &mut Connection<database::HarmonyDb>,
         user_id: i32,
-    ) -> Result<(), (Status, &'static str)> {
+    ) -> Result<(), (Status, Json<ErrorResponse>)> {
         // Fetch server_id from channel
         let server_id = sqlx::query_scalar!(
             "SELECT server_id FROM channels WHERE channel_id = $1",
@@ -31,8 +33,8 @@ impl UserMembershipChecker for ByChannel {
         )
         .fetch_optional(&mut ***db)
         .await
-        .map_err(|_| (Status::InternalServerError, "database error"))?
-        .ok_or((Status::NotFound, "channel not found"))?;
+        .map_err(|_| (Status::InternalServerError, json_error("database error")))?
+        .ok_or((Status::NotFound, json_error("channel not found")))?;
 
         // Check if the user is in the server
         sqlx::query_scalar!(
@@ -42,8 +44,8 @@ impl UserMembershipChecker for ByChannel {
         )
         .fetch_optional(&mut ***db)
         .await
-        .map_err(|_| (Status::InternalServerError, "database error"))?
-        .ok_or((Status::Forbidden, "user not in server"))?;
+        .map_err(|_| (Status::InternalServerError, json_error("database error")))?
+        .ok_or((Status::Forbidden, json_error("user not in server")))?;
 
         Ok(())
     }
@@ -54,13 +56,13 @@ impl UserMembershipChecker for ByServer {
         &self,
         db: &mut Connection<database::HarmonyDb>,
         user_id: i32,
-    ) -> Result<(), (Status, &'static str)> {
+    ) -> Result<(), (Status, Json<ErrorResponse>)> {
         // check if server exists
         sqlx::query_scalar!("SELECT 1 FROM servers WHERE server_id = $1", self.server_id)
             .fetch_optional(&mut ***db)
             .await
-            .map_err(|_| (Status::InternalServerError, "database error"))?
-            .ok_or((Status::NotFound, "server not found"))?;
+            .map_err(|_| (Status::InternalServerError, json_error("database error")))?
+            .ok_or((Status::NotFound, json_error("server not found")))?;
 
         // Check if the user is in the server
         sqlx::query_scalar!(
@@ -70,8 +72,8 @@ impl UserMembershipChecker for ByServer {
         )
         .fetch_optional(&mut ***db)
         .await
-        .map_err(|_| (Status::InternalServerError, "database error"))?
-        .ok_or((Status::Forbidden, "user not in server"))?;
+        .map_err(|_| (Status::InternalServerError, json_error("database error")))?
+        .ok_or((Status::Forbidden, json_error("user not in server")))?;
 
         Ok(())
     }

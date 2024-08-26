@@ -1,7 +1,7 @@
 use crate::database;
 use crate::models;
 
-use crate::utils::generate_token;
+use crate::utils::{generate_token, json_error::json_error};
 use rocket::http::{Cookie, CookieJar, Status};
 use rocket::response::status;
 use rocket::response::status::BadRequest;
@@ -74,10 +74,10 @@ pub async fn signup<'a>(
     // id, username, profile_picture
 
     user.validate()
-        .map_err(|_| (Status::BadRequest, "failed JSON validation"))?;
+        .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
 
-    if user.confirm_password != user.password {
-        return Err((Status::BadRequest, "passwords do not match"));
+    if user.confirmPassword != user.password {
+        return Err((Status::BadRequest, json_error("Passwords do not match")));
     }
 
     let username_exists = sqlx::query_scalar!(
@@ -87,10 +87,10 @@ pub async fn signup<'a>(
     )
     .fetch_optional(&mut **db)
     .await
-    .map_err(|_| (Status::BadRequest, "database error"))?;
+    .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
 
     if username_exists.is_some() {
-        return Err((Status::BadRequest, "username already exists"));
+        return Err((Status::BadRequest, json_error("Username already exists")));
     }
 
     // HASH PASSWORD
@@ -99,7 +99,12 @@ pub async fn signup<'a>(
     let argon2 = Argon2::default();
     let password_hash = argon2
         .hash_password(password, &salt)
-        .map_err(|_| (Status::InternalServerError, "could not hash password"))?
+        .map_err(|_| {
+            (
+                Status::InternalServerError,
+                json_error("Could not hash password"),
+            )
+        })?
         .to_string();
 
     // verify with https://docs.rs/argon2/latest/argon2/
@@ -121,7 +126,7 @@ pub async fn signup<'a>(
     )
     .fetch_one(&mut **db)
     .await
-    .map_err(|_| (Status::InternalServerError, "database insertion failed"))?;
+    .map_err(|_| (Status::InternalServerError, json_error("Database insertion failed")))?;
 
     let cookie = generate_token::jwt_cookie(user_response.user_id);
     jar.add(cookie);
@@ -143,8 +148,8 @@ pub async fn login<'a>(
     )
     .fetch_optional(&mut **db)
     .await
-    .map_err(|_| (Status::BadRequest, "database error"))?
-    .ok_or((Status::NotFound, "username doesn't exist"))?;
+    .map_err(|_| (Status::BadRequest, json_error("Database error")))?
+    .ok_or((Status::NotFound, json_error("Username doesn't exist")))?;
 
     let user_id = user_data.user_id;
     let display_username = user_data.display_username;
@@ -153,13 +158,17 @@ pub async fn login<'a>(
     let date_joined = user_data.date_joined;
 
     // check password correct
-    let parsed_hash = PasswordHash::new(hashed_password.as_str())
-        .map_err(|_| (Status::InternalServerError, "could not parse hash"))?;
+    let parsed_hash = PasswordHash::new(hashed_password.as_str()).map_err(|_| {
+        (
+            Status::InternalServerError,
+            json_error("Could not parse hash"),
+        )
+    })?;
     if Argon2::default()
         .verify_password(user.password.as_bytes(), &parsed_hash)
         .is_err()
     {
-        return Err((Status::BadRequest, "Password incorrect"));
+        return Err((Status::BadRequest, json_error("Password incorrect")));
     }
 
     let cookie = generate_token::jwt_cookie(user_id);

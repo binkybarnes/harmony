@@ -1,5 +1,9 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::{database, models, utils};
+use crate::{
+    database,
+    models::{self, ErrorResponse},
+    utils::{self, json_error::json_error},
+};
 use rocket::http::Status;
 use rocket::response::status;
 use rocket::response::Responder;
@@ -30,9 +34,9 @@ pub async fn send_message(
     )
     .fetch_one(&mut **db)
     .await
-    .map_err(|_| (Status::BadRequest, "database error"))?;
+    .map_err(|_| (Status::BadRequest, json_error("database error")))?;
 
-    Ok::<_, (Status, &str)>(status::Created::new("/send").body(Json(message)))
+    Ok::<_, (Status, Json<ErrorResponse>)>(status::Created::new("/send").body(Json(message)))
 }
 
 // gets all messages from a channel
@@ -41,7 +45,7 @@ pub async fn get_messages(
     guard: JwtGuard,
     channel_id: i32,
     mut db: Connection<database::HarmonyDb>,
-) -> Result<Json<Vec<models::Message>>, (Status, &'static str)> {
+) -> Result<Json<Vec<models::Message>>, (Status, Json<ErrorResponse>)> {
     let user_id = &guard.0.sub;
 
     let channel_checker = ByChannel { channel_id };
@@ -54,7 +58,7 @@ pub async fn get_messages(
     )
     .fetch_all(&mut **db)
     .await
-    .map_err(|_| (Status::BadRequest, "database error"))?;
+    .map_err(|_| (Status::BadRequest, json_error("database error")))?;
 
     Ok(Json(messages))
 }
