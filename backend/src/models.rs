@@ -24,7 +24,7 @@ pub struct UserSignupInput<'r> {
     #[validate(length(min = 1, max = 20))]
     pub password: &'r str,
     #[validate(length(min = 1, max = 20))]
-    pub confirmPassword: &'r str,
+    pub confirm_password: &'r str,
 }
 
 #[derive(Deserialize)]
@@ -102,6 +102,6 @@ pub struct Channel {
 
 #[derive(Deserialize)]
 pub struct CreateServerInput {
-    pub recipient_id: i32,
+    pub recipient_ids: Vec<i32>,
     pub server_type: ServerType,
 }

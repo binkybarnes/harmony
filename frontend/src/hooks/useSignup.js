@@ -4,12 +4,12 @@ import { useAuthContext } from "../context/AuthContext";
 const useSignup = () => {
   const [loading, setLoading] = useState(false);
   const { setAuthUser } = useAuthContext();
-  const signup = async ({ email, username, password, confirmPassword }) => {
+  const signup = async ({ email, username, password, confirm_password }) => {
     const success = handleInputErrors({
       email,
       username,
       password,
-      confirmPassword,
+      confirm_password,
     });
     if (!success) return;
 
@@ -22,7 +22,7 @@ const useSignup = () => {
           email,
           username,
           password,
-          confirmPassword,
+          confirm_password,
         }),
       });
 
@@ -45,8 +45,8 @@ const useSignup = () => {
 
 export default useSignup;
 
-function handleInputErrors({ email, username, password, confirmPassword }) {
-  if (!email || !username || !password || !confirmPassword) {
+function handleInputErrors({ email, username, password, confirm_password }) {
+  if (!email || !username || !password || !confirm_password) {
     toast.error("Please fill in all fields");
     return false;
   }
@@ -55,7 +55,7 @@ function handleInputErrors({ email, username, password, confirmPassword }) {
     toast.error("Invalid email");
     return false;
   }
-  if (password !== confirmPassword) {
+  if (password !== confirm_password) {
     toast.error("Passwords do not match");
     return false;
   }

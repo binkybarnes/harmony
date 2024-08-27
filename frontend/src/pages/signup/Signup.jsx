@@ -8,7 +8,7 @@ const Signup = () => {
     email: "",
     username: "",
     password: "",
-    confirmPassword: "",
+    confirm_password: "",
   });
 
   const { loading, signup } = useSignup();
@@ -44,7 +44,7 @@ const Signup = () => {
           />
           <Field
             handleOnChange={handleOnChange}
-            name="confirmPassword"
+            name="confirm_password"
             header="CONFIRM PASSWORD"
           />
 

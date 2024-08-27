@@ -74,7 +74,7 @@ pub async fn signup<'a>(
     user.validate()
         .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
 
-    if user.confirmPassword != user.password {
+    if user.confirm_password != user.password {
         return Err((Status::BadRequest, json_error("Passwords do not match")));
     }
 

@@ -100,7 +100,7 @@ pub async fn join_server(
     // .await
     // .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
 
-    join_server_helper(*user_id, server_id, &mut db);
+    join_server_helper(*user_id, server_id, &mut db).await?;
 
     Ok::<_, (Status, Json<ErrorResponse>)>(Json(server))
 }
@@ -111,16 +111,47 @@ pub async fn create_server(
     server: Json<models::CreateServerInput>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<(), (Status, Json<ErrorResponse>)> {
-    let server_type = server.server_type;
-    let recipient_id = server.recipient_id;
-    let user_id = &guard.0.sub;
+    let server_type: ServerType = server.server_type;
+    let recipient_ids: &Vec<i32> = &server.recipient_ids;
+    let user_id: &i32 = &guard.0.sub;
+
+    // validate num recipients given server type
+    let recipients_len = recipient_ids.len();
+    match server_type {
+        ServerType::Server => {
+            if recipients_len != 0 {
+                return Err((
+                    Status::BadRequest,
+                    json_error("Server type server should not have recipients on creation"),
+                ));
+            };
+        }
+        ServerType::Dm => {
+            if recipients_len != 1 {
+                return Err((
+                    Status::BadRequest,
+                    json_error("Server type dm should have 1 recipient"),
+                ));
+            };
+        }
+        ServerType::GroupChat => {
+            if recipients_len < 2 {
+                return Err((
+                    Status::BadRequest,
+                    json_error("Server type groupchat should have at least 2 recipients"),
+                ));
+            };
+        }
+    };
 
     // make server
-    let server_id: i32 = create_server_helper(server_type, &mut db).await?;
+    let server_id: i32 = create_server_helper(server_type, recipients_len as i32, &mut db).await?;
     // make sender join server
     join_server_helper(*user_id, server_id, &mut db).await?;
-    // make recipient join server
-    join_server_helper(recipient_id, server_id, &mut db).await?;
+    // make recipients join server
+    for recipient in recipient_ids.iter() {
+        join_server_helper(*recipient, server_id, &mut db).await?;
+    }
 
     // todo!("implement groupchat");
     Ok(())
@@ -128,18 +159,9 @@ pub async fn create_server(
 
 async fn create_server_helper(
     server_type: ServerType,
+    num_recipients: i32,
     db: &mut Connection<database::HarmonyDb>,
 ) -> Result<i32, (Status, Json<ErrorResponse>)> {
-    let members: i32 = match server_type {
-        ServerType::Dm => 2,
-        ServerType::Server => 1,
-        ServerType::GroupChat => {
-            println!("NOT IMPLEMENTED YET");
-            99
-            // NOT IMPLEMENTED YET
-        }
-    };
-
     // make server
     let server = sqlx::query_as!(
         models::Server,
@@ -147,7 +169,7 @@ async fn create_server_helper(
         VALUES ($1, $2) 
         RETURNING server_id, server_type AS "server_type!: ServerType", members"#,
         server_type as ServerType,
-        members
+        num_recipients + 1
     )
     .fetch_one(&mut ***db)
     .await
