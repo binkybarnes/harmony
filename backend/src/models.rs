@@ -78,7 +78,7 @@ pub struct Message {
 //     pub server_type: &'r str,
 // }
 
-#[derive(sqlx::Type, Deserialize, Serialize)]
+#[derive(sqlx::Type, Deserialize, Serialize, Clone, Copy)]
 #[sqlx(type_name = "server_type", rename_all = "lowercase")]
 pub enum ServerType {
     Dm,
@@ -98,4 +98,10 @@ pub struct Channel {
     pub channel_id: i32,
     pub server_id: i32,
     pub channel_name: String,
+}
+
+#[derive(Deserialize)]
+pub struct CreateServerInput {
+    pub recipient_id: i32,
+    pub server_type: ServerType,
 }
