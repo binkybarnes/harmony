@@ -80,26 +80,6 @@ pub async fn join_server(
         return Err((Status::BadRequest, json_error("User already in server")));
     }
 
-    // // join server
-    // sqlx::query!(
-    //     "INSERT INTO public.users_servers (user_id, server_id)
-    // VALUES ($1, $2)",
-    //     user_id,
-    //     server_id
-    // )
-    // .execute(&mut **db)
-    // .await
-    // .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
-
-    // // update members count
-    // sqlx::query!(
-    //     "UPDATE servers SET members = members + 1 where server_id = $1",
-    //     server_id
-    // )
-    // .execute(&mut **db)
-    // .await
-    // .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
-
     join_server_helper(*user_id, server_id, &mut db).await?;
 
     Ok::<_, (Status, Json<ErrorResponse>)>(Json(server))

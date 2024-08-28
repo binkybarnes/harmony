@@ -37,6 +37,7 @@ pub fn build() -> Rocket<Build> {
             "/api/channels",
             routes![controllers::channel_routes::get_channels],
         )
+        .mount("/api/users", routes![controllers::users_routes::get_users])
 }
 
 // .mount(

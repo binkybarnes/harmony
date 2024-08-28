@@ -105,3 +105,8 @@ pub struct CreateServerInput {
     pub recipient_ids: Vec<i32>,
     pub server_type: ServerType,
 }
+
+#[derive(Deserialize)]
+pub struct GetUsersInput {
+    pub server_ids: Vec<i32>,
+}
