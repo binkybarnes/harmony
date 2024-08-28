@@ -1,4 +1,4 @@
-const Conversation = ({ username, conversation }) => {
+const Conversation = ({ otherUser }) => {
   return (
     <a className="mb-1 flex items-center gap-2 rounded-md bg-base-100 p-1.5 hover:cursor-pointer hover:bg-neutral-700 hover:text-neutral-300 active:bg-neutral-600 active:text-neutral-200">
       <div className="avatar">
@@ -6,7 +6,7 @@ const Conversation = ({ username, conversation }) => {
           <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
         </div>
       </div>
-      <p className="truncate font-medium">Username</p>
+      <p className="truncate font-medium">{otherUser.display_username}</p>
     </a>
   );
 };

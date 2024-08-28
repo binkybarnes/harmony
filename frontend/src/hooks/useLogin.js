@@ -22,7 +22,7 @@ const useLogin = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
+        throw new Error(data.error);
       }
 
       localStorage.setItem("user-info", JSON.stringify(data));

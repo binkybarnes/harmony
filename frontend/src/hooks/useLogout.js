@@ -15,7 +15,7 @@ const useLogout = () => {
       });
 
       if (!res.ok) {
-        throw new Error("Something went wrong");
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
       localStorage.removeItem("user-info");
       setAuthUser(null);

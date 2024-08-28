@@ -85,6 +85,7 @@ pub async fn join_server(
     Ok::<_, (Status, Json<ErrorResponse>)>(Json(server))
 }
 
+// WARNING, does not check for duplicate DM's with the same person
 #[post("/create", format = "json", data = "<server>")]
 pub async fn create_server(
     guard: JwtGuard,
@@ -113,6 +114,12 @@ pub async fn create_server(
                     json_error("Server type dm should have 1 recipient"),
                 ));
             };
+            if recipient_ids[0] == *user_id {
+                return Err((
+                    Status::BadRequest,
+                    json_error("Can not create DM with yourself"),
+                ));
+            }
         }
         ServerType::GroupChat => {
             if recipients_len < 2 {
@@ -125,7 +132,7 @@ pub async fn create_server(
     };
 
     // make server
-    let server_id: i32 = create_server_helper(server_type, recipients_len as i32, &mut db).await?;
+    let server_id: i32 = create_server_helper(server_type, &mut db).await?;
     // make sender join server
     join_server_helper(*user_id, server_id, &mut db).await?;
     // make recipients join server
@@ -133,23 +140,21 @@ pub async fn create_server(
         join_server_helper(*recipient, server_id, &mut db).await?;
     }
 
-    // todo!("implement groupchat");
     Ok(())
 }
 
 async fn create_server_helper(
     server_type: ServerType,
-    num_recipients: i32,
     db: &mut Connection<database::HarmonyDb>,
 ) -> Result<i32, (Status, Json<ErrorResponse>)> {
     // make server
+    // num members initially 0, members will be incremented in join_server
     let server = sqlx::query_as!(
         models::Server,
         r#"INSERT INTO public.servers (server_type, members)
-        VALUES ($1, $2) 
+        VALUES ($1, 0) 
         RETURNING server_id, server_type AS "server_type!: ServerType", members"#,
-        server_type as ServerType,
-        num_recipients + 1
+        server_type as ServerType
     )
     .fetch_one(&mut ***db)
     .await
@@ -172,7 +177,15 @@ async fn join_server_helper(
     )
     .execute(&mut ***db)
     .await
-    .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+    .map_err(|_| {
+        (
+            Status::InternalServerError,
+            json_error(&format!(
+                "Database error; does recipient_id {} exist?",
+                user_id
+            )),
+        )
+    })?;
 
     // update members count
     sqlx::query!(

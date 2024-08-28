@@ -7,7 +7,7 @@ use validator::{Validate, ValidationError};
 
 use chrono::{DateTime, NaiveDate, Utc};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct ErrorResponse {
     pub error: String,
 }
@@ -107,6 +107,6 @@ pub struct CreateServerInput {
 }
 
 #[derive(Deserialize)]
-pub struct GetUsersInput {
+pub struct ServerIds {
     pub server_ids: Vec<i32>,
 }
