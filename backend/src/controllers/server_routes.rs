@@ -1,6 +1,9 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::models::ServerType;
-use crate::utils::json_error::json_error;
+use crate::models::{Channel, ServerType, User};
+use crate::utils::{
+    json_error::json_error,
+    user_membership::{ByChannel, ByServer, UserMembershipChecker},
+};
 use crate::{
     database,
     models::{self, ErrorResponse},
@@ -221,4 +224,82 @@ async fn join_server_helper(
     .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
 
     Ok(())
+}
+
+// CHANNELS -----------------------------------------------------------------
+
+// get channels list given server_id list
+#[get("/channels?<server_ids>")]
+pub async fn get_channels(
+    _guard: JwtGuard,
+    server_ids: Vec<i32>,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Vec<Vec<Channel>>>, (Status, Json<ErrorResponse>)> {
+    // let user_id = &guard.0.sub;
+
+    let mut channels_list: Vec<Vec<Channel>> = Vec::new();
+    for server_id in server_ids.iter() {
+        // let server_checker = ByServer {
+        //     server_id: *server_id,
+        // };
+        // server_checker.user_in_server(&mut db, *user_id).await?;
+        let channels = get_channels_helper(*server_id, &mut db).await?;
+        channels_list.push(channels);
+    }
+    Ok::<_, (Status, Json<ErrorResponse>)>(Json(channels_list))
+}
+
+// returns a list of channels of given server_id
+async fn get_channels_helper(
+    server_id: i32,
+    db: &mut Connection<database::HarmonyDb>,
+) -> Result<Vec<Channel>, (Status, Json<ErrorResponse>)> {
+    let channels = sqlx::query_as!(
+        models::Channel,
+        "SELECT * FROM channels
+        WHERE server_id = $1",
+        server_id
+    )
+    .fetch_all(&mut ***db)
+    .await
+    .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
+
+    Ok(channels)
+}
+
+// USERS -----------------------------------------------------------------
+
+// get list of users given vector of server_ids
+#[get("/users?<server_ids>")]
+pub async fn get_users(
+    server_ids: Vec<i32>,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Vec<Vec<User>>>, (Status, Json<ErrorResponse>)> {
+    let mut users_list: Vec<Vec<User>> = Vec::new();
+    for server_id in &server_ids {
+        let users = get_users_helper(*server_id, &mut db).await?;
+        users_list.push(users);
+    }
+
+    Ok(Json(users_list))
+}
+
+// returns a list of users in given server_id
+async fn get_users_helper(
+    server_id: i32,
+    db: &mut Connection<database::HarmonyDb>,
+) -> Result<Vec<User>, (Status, Json<ErrorResponse>)> {
+    let users = sqlx::query_as!(
+        User,
+        "SELECT u.user_id, display_username, profile_picture, date_joined
+        FROM users u
+        JOIN users_servers us ON u.user_id = us.user_id
+        WHERE us.server_id = $1",
+        server_id
+    )
+    .fetch_all(&mut ***db)
+    .await
+    .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
+
+    Ok(users)
 }

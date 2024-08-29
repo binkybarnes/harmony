@@ -4,12 +4,13 @@
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
-// returns server list, userslist (list of users in each server)
+// returns server list, userslist (list of users in each server), and channelsList
 const useGetConversations = (serverType) => {
   const [loading, setLoading] = useState(false);
   const [servers, setServers] = useState([]);
   const [serverIds, setServerIds] = useState([]);
   const [usersList, setUsersList] = useState([]);
+  const [channelsList, setChannelsList] = useState([]);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -41,9 +42,9 @@ const useGetConversations = (serverType) => {
 
   useEffect(() => {
     const getUsersInfo = async () => {
-      if (serverIds.length === 0) {
-        return;
-      }
+      //   if (serverIds.length === 0) {
+      //     return;
+      //   }
       setLoading(true);
       try {
         const usersRes = await fetch(`/api/users/get/users?${queryString}`, {
@@ -63,6 +64,10 @@ const useGetConversations = (serverType) => {
 
     getUsersInfo();
   }, [serverIds, queryString]);
+
+  useEffect(() => {
+    const getChannelsInfo = async () => {};
+  });
 
   return { loading, servers, serverIds, usersList };
 };

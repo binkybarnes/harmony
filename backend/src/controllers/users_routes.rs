@@ -6,9 +6,9 @@ use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::serde::json::Json;
 use rocket_db_pools::Connection;
-// get users given vector of server_ids
-#[get("/get/users?<server_ids>")]
-pub async fn get_users(
+// get list of users given vector of server_ids
+#[get("/get/userslist?<server_ids>")]
+pub async fn get_users_list(
     server_ids: Vec<i32>,
     mut db: Connection<HarmonyDb>,
 ) -> Result<Json<Vec<Vec<User>>>, (Status, Json<ErrorResponse>)> {
