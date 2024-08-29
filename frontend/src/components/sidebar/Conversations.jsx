@@ -47,7 +47,14 @@ const Conversations = () => {
       return null;
     }
     const otherUser = users.filter((user) => user.user_id !== user_id)[0];
-    return <Conversation key={servers[i].server_id} otherUser={otherUser} />;
+
+    return (
+      <Conversation
+        key={servers[i].server_id}
+        otherUser={otherUser}
+        server={servers[i]}
+      />
+    );
   });
 
   return (

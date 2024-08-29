@@ -143,6 +143,28 @@ pub async fn create_server(
     Ok(())
 }
 
+async fn create_default_channel(
+    server_id: i32,
+    db: &mut Connection<database::HarmonyDb>,
+) -> Result<(), (Status, Json<ErrorResponse>)> {
+    // create a channel with name default
+    sqlx::query!(
+        "INSERT INTO channels (server_id, channel_name)
+    VALUES ($1, 'default')",
+        server_id
+    )
+    .execute(&mut ***db)
+    .await
+    .map_err(|_| {
+        (
+            Status::InternalServerError,
+            json_error("Database error; does server_id exist?"),
+        )
+    })?;
+
+    Ok(())
+}
+
 async fn create_server_helper(
     server_type: ServerType,
     db: &mut Connection<database::HarmonyDb>,
@@ -160,6 +182,8 @@ async fn create_server_helper(
     .await
     .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
     let server_id: i32 = server.server_id;
+
+    create_default_channel(server_id, db).await?;
 
     Ok(server_id)
 }
