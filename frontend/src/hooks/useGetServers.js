@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+// usually only for server type server, cause the other server types need serverids and userslist
 const useGetServers = (serverType) => {
   const [loading, setLoading] = useState(false);
   const [servers, setServers] = useState([]);

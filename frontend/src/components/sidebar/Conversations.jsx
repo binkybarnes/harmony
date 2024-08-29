@@ -3,6 +3,8 @@ import useGetUsers from "../../hooks/useGetUsers";
 import Conversation from "./Conversation";
 import { useAuthContext } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+import { useEffect, useMemo, useState } from "react";
+import useGetConversations from "../../hooks/useGetConversations";
 
 const validateNestedUsers = (nestedUsers, serverType) => {
   // correct number of users for each server type
@@ -31,27 +33,22 @@ const validateNestedUsers = (nestedUsers, serverType) => {
 };
 
 const Conversations = () => {
-  const { servers } = useGetServers("Dm");
-  const serverIds = servers.map((server) => server.server_id);
-  const { usersList } = useGetUsers(serverIds);
-
+  // TODO: put groupchats in here
+  const { loading, servers, serverIds, usersList } = useGetConversations("Dm");
   const { authUser } = useAuthContext();
   const user_id = authUser.user_id;
-
-  console.log(servers);
-  console.log(usersList);
 
   const mapDmConversations = usersList.map((users, i) => {
     if (users.length != 2) {
       toast.error("DM servers should have only 2 members");
       return null;
     }
-    const otherUser = users.filter((user) => user.user_id !== user_id)[0];
+    const otherUsers = users.filter((user) => user.user_id !== user_id);
 
     return (
       <Conversation
-        key={servers[i].server_id}
-        otherUser={otherUser}
+        key={serverIds[i]}
+        otherUsers={otherUsers}
         server={servers[i]}
       />
     );

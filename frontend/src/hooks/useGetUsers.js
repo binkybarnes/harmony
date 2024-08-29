@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 // serverIds: list of server_ids
 const useGetUsers = (serverIds) => {
   const [loading, setLoading] = useState(false);
-  const [usersList, setUsers] = useState([]);
+  const [usersList, setUsersList] = useState([]);
   // constructing query
   // ex: http://127.0.0.1:5000/api/users/get/users?server_ids=4&server_ids=5&server_ids=6
   const queryString = useMemo(() => {
@@ -26,7 +26,7 @@ const useGetUsers = (serverIds) => {
         if (!res.ok) {
           throw new Error(data.error);
         }
-        setUsers(data);
+        setUsersList(data);
       } catch (error) {
         toast.error(error.message);
       } finally {
