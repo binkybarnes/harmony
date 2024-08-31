@@ -1,5 +1,6 @@
 use middleware::cors;
 use rocket_db_pools::Database;
+use utils::error_catchers::not_authorized;
 
 #[macro_use]
 extern crate rocket;
@@ -27,5 +28,6 @@ fn rocket() -> _ {
     routes::build()
         .attach(database::HarmonyDb::init())
         .attach(cors::Cors)
+        .register("/", catchers![not_authorized])
         .mount("/", routes![index])
 }

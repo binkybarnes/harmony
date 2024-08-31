@@ -12,9 +12,7 @@ const useGetServers = (serverType) => {
       try {
         const res = await fetch(`/api/servers/get/${serverType}`);
         const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error);
-        }
+        if (!res.ok) throw new Error(data.error);
         setServers(data);
       } catch (error) {
         toast.error(error.message);

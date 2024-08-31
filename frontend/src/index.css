@@ -142,10 +142,10 @@ input:focus {
     .scrollbar-sidebar::-webkit-scrollbar-track {
       background: transparent;
     }
-    .scrollbar-sidebar::-webkit-scrollbar-thumb {
+    .scrollbar-sidebar.visible-on-hover::-webkit-scrollbar-thumb {
       visibility: hidden;
     }
-    .scrollbar-sidebar:hover::-webkit-scrollbar-thumb {
+    .scrollbar-sidebar.visible-on-hover:hover::-webkit-scrollbar-thumb {
       visibility: visible;
     }
 
@@ -177,10 +177,13 @@ input:focus {
   @supports not selector(::-webkit-scrollbar) {
     .scrollbar-sidebar {
       scrollbar-width: thin;
+      scrollbar-color: red transparent;
+    }
+    .scrollbar-sidebar.visible-on-hover {
       scrollbar-color: transparent transparent;
     }
 
-    .scrollbar-sidebar:hover {
+    .scrollbar-sidebar.visible-on-hover:hover {
       scrollbar-color: red transparent;
     }
 

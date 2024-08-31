@@ -1,40 +1,14 @@
-import useGetServers from "../../hooks/useGetServers";
-import useGetUsers from "../../hooks/useGetUsers";
 import Conversation from "./Conversation";
 import { useAuthContext } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import { useEffect, useMemo, useState } from "react";
-import useGetConversations from "../../hooks/useGetConversations";
-
-const validateNestedUsers = (nestedUsers, serverType) => {
-  // correct number of users for each server type
-  let numUsersCheck;
-  switch (serverType) {
-    case "Dm":
-      numUsersCheck = (users) => users.length == 2;
-      break;
-    case "GroupChat":
-      numUsersCheck = (users) => users.length > 2;
-      break;
-    case "Server":
-      numUsersCheck = (users) => users.length > 0;
-      break;
-  }
-
-  if (!nestedUsers.every((users) => numUsersCheck(users))) {
-    // Find the invalid arrays for better error context
-    const invalidArrays = nestedUsers.filter((users) => !numUsersCheck(users));
-    console.log("Some servers have wrong number of users");
-    console.log(invalidArrays);
-    // throw new Error(
-    //   `Validation failed. Some servers have wrong number of users: ${JSON.stringify(invalidArrays)}`,
-    // );
-  }
-};
+import useConversationInfo from "../../hooks/useConversationInfo";
 
 const Conversations = () => {
   // TODO: put groupchats in here
-  const { loading, servers, serverIds, usersList } = useGetConversations("Dm");
+  const { loading, servers, serverIds, usersList, channelsList } =
+    useConversationInfo("Dm");
+
   const { authUser } = useAuthContext();
   const user_id = authUser.user_id;
 
@@ -50,13 +24,18 @@ const Conversations = () => {
         key={serverIds[i]}
         otherUsers={otherUsers}
         server={servers[i]}
+        channel={channelsList[i][0]}
       />
     );
   });
 
   return (
-    <nav className="scrollbar-sidebar flex-1 overflow-y-scroll pl-2">
-      {mapDmConversations}
+    <nav className="scrollbar-sidebar visible-on-hover flex-1 overflow-y-scroll pl-2">
+      {loading ? (
+        <span className="loading loading-spinner" />
+      ) : (
+        mapDmConversations
+      )}
     </nav>
   );
 };

@@ -4,6 +4,7 @@ use crate::{
     models::{self, ErrorResponse},
     utils::{self, json_error::json_error},
 };
+use argon2::password_hash::rand_core::Error;
 use rocket::http::Status;
 use rocket::response::status;
 use rocket::response::Responder;
@@ -11,14 +12,15 @@ use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket_db_pools::Connection;
 use utils::user_membership::{ByChannel, ByServer, UserMembershipChecker};
 
-#[post("/send", format = "json", data = "<message>")]
+#[post("/send/<channel_id>", format = "json", data = "<message>")]
 pub async fn send_message(
     guard: JwtGuard,
-    message: Json<models::SendMessageInput<'_>>,
+    channel_id: i32,
+    message: Json<models::SendMessageInput>,
     mut db: Connection<database::HarmonyDb>,
-) -> impl Responder {
+) -> Result<(Status, Json<models::Message>), (Status, Json<ErrorResponse>)> {
     let user_id = &guard.0.sub;
-    let channel_id = message.channel_id;
+
     // check if user is in the server that has the channel the message is being sent to
     let channel_checker = ByChannel { channel_id };
     channel_checker.user_in_server(&mut db, *user_id).await?;
@@ -29,14 +31,15 @@ pub async fn send_message(
         VALUES ($1, $2, $3)
         RETURNING *",
         user_id,
-        message.channel_id,
+        channel_id,
         message.message
     )
     .fetch_one(&mut **db)
     .await
     .map_err(|_| (Status::BadRequest, json_error("database error")))?;
 
-    Ok::<_, (Status, Json<ErrorResponse>)>(status::Created::new("/send").body(Json(message)))
+    // Ok::<_, (Status, Json<ErrorResponse>)>(status::Created::new("/send").body(Json(message)))
+    Ok::<_, (Status, Json<ErrorResponse>)>((Status::Created, Json(message)))
 }
 
 // gets all messages from a channel

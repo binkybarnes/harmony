@@ -231,7 +231,7 @@ async fn join_server_helper(
 // get channels list given server_id list
 #[get("/channels?<server_ids>")]
 pub async fn get_channels(
-    _guard: JwtGuard,
+    guard: JwtGuard,
     server_ids: Vec<i32>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<Vec<Channel>>>, (Status, Json<ErrorResponse>)> {
