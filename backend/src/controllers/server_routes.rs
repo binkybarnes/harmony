@@ -230,7 +230,7 @@ async fn join_server_helper(
 
 // get channels list given server_id list
 #[get("/channels?<server_ids>")]
-pub async fn get_channels(
+pub async fn get_channels_list(
     guard: JwtGuard,
     server_ids: Vec<i32>,
     mut db: Connection<database::HarmonyDb>,
@@ -269,9 +269,19 @@ async fn get_channels_helper(
 
 // USERS -----------------------------------------------------------------
 
+// get users given one server_id
+#[get("/users/<server_id>")]
+pub async fn get_users(
+    server_id: i32,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Vec<User>>, (Status, Json<ErrorResponse>)> {
+    let users = get_users_helper(server_id, &mut db).await?;
+    Ok(Json(users))
+}
+
 // get list of users given vector of server_ids
 #[get("/users?<server_ids>")]
-pub async fn get_users(
+pub async fn get_users_list(
     server_ids: Vec<i32>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<Vec<User>>>, (Status, Json<ErrorResponse>)> {

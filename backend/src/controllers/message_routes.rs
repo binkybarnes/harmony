@@ -42,7 +42,7 @@ pub async fn send_message(
     Ok::<_, (Status, Json<ErrorResponse>)>((Status::Created, Json(message)))
 }
 
-// gets all messages from a channel
+// gets all messages from a channel (should this be in channels routes)
 #[get("/get/<channel_id>")]
 pub async fn get_messages(
     guard: JwtGuard,

@@ -1,8 +1,9 @@
 import PropTypes from "prop-types";
 import useServer from "../../zustand/useServer";
+import { useAuthContext } from "../../context/AuthContext";
 
 // conversation is a Server that is type DM or GroupChat, and they have only 1 channel
-const Conversation = ({ otherUsers, server, channel }) => {
+const Conversation = ({ users, server, channel }) => {
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
   const selectedServer = useServer((state) => state.selectedServer);
@@ -10,6 +11,9 @@ const Conversation = ({ otherUsers, server, channel }) => {
   const serverId = server.server_id;
   const isSelected = selectedServer?.server_id === serverId;
 
+  const { authUser } = useAuthContext();
+  const user_id = authUser.user_id;
+  const otherUsers = users.filter((user) => user.user_id !== user_id);
   const conversationName = otherUsers
     .map((user) => user.display_username)
     .join(", ");
@@ -27,16 +31,17 @@ const Conversation = ({ otherUsers, server, channel }) => {
       onClick={handleClick}
       className={`mb-1 flex h-[52px] items-center gap-2 rounded-md bg-base-100 p-1.5 hover:cursor-pointer hover:bg-neutral-700 hover:text-neutral-300 active:bg-neutral-600 active:text-neutral-200 ${isSelected ? "bg-neutral-600 text-neutral-200" : ""} `}
     >
-      <div className="w-10 rounded-md object-contain">
-        <img src={`https://robohash.org/${conversationName}`} />
-      </div>
+      <img
+        className="h-10 w-10 rounded-md"
+        src={`https://robohash.org/${conversationName}`}
+      />
       <p className="truncate font-medium">{conversationName}</p>
     </div>
   );
 };
 
 Conversation.propTypes = {
-  otherUsers: PropTypes.arrayOf(
+  users: PropTypes.arrayOf(
     PropTypes.shape({
       date_joined: PropTypes.string,
       display_username: PropTypes.string,

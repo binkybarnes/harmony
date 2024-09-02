@@ -7,6 +7,9 @@ const useServer = create((set) => ({
   setSelectedChannel: (selectedChannel) => set({ selectedChannel }),
   messages: [],
   setMessages: (messages) => set({ messages }),
+  // members of current server
+  users: [],
+  setUsers: (users) => set({ users }),
 }));
 
 export default useServer;

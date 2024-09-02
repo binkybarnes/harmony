@@ -1,16 +1,27 @@
 import { Link } from "react-router-dom";
 import Field from "../../components/SignupField/Field";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import useLogin from "../../hooks/useLogin";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [inputs, setInputs] = useState({
+    username: "",
+    password: "",
+  });
+
   const { loading, login } = useLogin();
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login({ username, password });
+    await login(inputs);
   };
+
+  const handleOnChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setInputs((prev) => ({ ...prev, [name]: value }));
+    },
+    [setInputs],
+  );
 
   return (
     <div className="flex h-screen items-center justify-center overflow-hidden bg-neutral">
@@ -21,12 +32,12 @@ const Login = () => {
         <h1 className="text-2xl font-semibold">Login</h1>
         <div className="text-left">
           <Field
-            handleOnChange={(e) => setUsername(e.target.value)}
+            handleOnChange={handleOnChange}
             name="username"
             header="USERNAME"
           />
           <Field
-            handleOnChange={(e) => setPassword(e.target.value)}
+            handleOnChange={handleOnChange}
             name="password"
             header="PASSWORD"
           />

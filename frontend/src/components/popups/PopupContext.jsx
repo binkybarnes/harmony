@@ -1,7 +1,7 @@
 import { createContext, useState, useContext } from "react";
 import PropTypes from "prop-types";
 
-const PopupContext = createContext();
+const PopupContext = createContext(null);
 
 const PopupProvider = ({ children }) => {
   const [serverTooltip, setServerTooltip] = useState({

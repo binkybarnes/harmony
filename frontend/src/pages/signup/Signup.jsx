@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Field from "../../components/SignupField/Field";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import useSignup from "../../hooks/useSignup";
 
 const Signup = () => {
@@ -13,10 +13,13 @@ const Signup = () => {
 
   const { loading, signup } = useSignup();
 
-  const handleOnChange = (e) => {
-    const { name, value } = e.target;
-    setInputs((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleOnChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setInputs((prev) => ({ ...prev, [name]: value }));
+    },
+    [setInputs],
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
