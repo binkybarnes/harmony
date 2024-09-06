@@ -109,3 +109,17 @@ pub struct CreateServerInput {
 pub struct ServerIds {
     pub server_ids: Vec<i32>,
 }
+
+use std::collections::HashSet;
+use std::sync::{Arc, Mutex};
+
+pub type OnlineUsers = Arc<Mutex<HashSet<i32>>>;
+// Helper function to create a new instance of OnlineUsers
+pub fn new_online_users() -> OnlineUsers {
+    Arc::new(Mutex::new(HashSet::new()))
+}
+
+#[derive(Serialize)]
+pub struct OnlineUsersResponse {
+    pub users: HashSet<i32>,
+}

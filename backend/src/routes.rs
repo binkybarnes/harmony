@@ -1,4 +1,4 @@
-use crate::controllers;
+use crate::controllers::{self, websockets};
 
 use rocket::{Build, Rocket};
 
@@ -36,6 +36,7 @@ pub fn build() -> Rocket<Build> {
                 controllers::server_routes::get_users,
             ],
         )
+        .mount("/", routes![controllers::websockets::chat])
     // .mount(
     //     "/api/channels",
     //     routes![controllers::channel_routes::get_channels],
