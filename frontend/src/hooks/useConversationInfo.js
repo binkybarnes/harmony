@@ -83,7 +83,7 @@ const useConversationInfo = (serverType) => {
     fetchData();
   }, []);
 
-  return { loading, servers, serverIds, usersList, channelsList };
+  return { loading, servers, usersList, channelsList };
 };
 
 export default useConversationInfo;

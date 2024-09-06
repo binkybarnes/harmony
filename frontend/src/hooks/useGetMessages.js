@@ -43,30 +43,24 @@ const useGetMessages = () => {
     if (!selectedServer?.server_id || !selectedChannel?.channel_id) return;
     const getMessages = async () => {
       setLoading(true);
-      const messagesData = await fetchMessages();
-      if (!messagesData) {
-        setLoading(false);
-        return;
-      }
-      const usersData = await fetchUsers();
-      // const usersMap = usersData.reduce((acc, user) => {
-      //   acc[user.user_id] = user;
-      //   return acc;
-      // }, {});
+      const [usersData, messagesData] = await Promise.all([
+        fetchUsers(),
+        fetchMessages(),
+      ]);
 
-      // const messagesWithUsers = messagesData.map((message) => {
-      //   const { display_username, profile_picture } = usersMap[message.user_id];
-      //   return { ...message, display_username, profile_picture };
-      // });
-      setMessages(messagesData);
-      setUsers(usersData);
+      if (usersData && messagesData) {
+        setUsers(usersData);
+        setMessages(messagesData);
+      }
+
+      setLoading(false);
 
       setLoading(false);
     };
 
     getMessages();
   }, [selectedServer?.server_id, selectedChannel?.channel_id]);
-  return { loading, messages };
+  return { loading, messages, users };
 };
 
 export default useGetMessages;

@@ -3,10 +3,11 @@ import MessagesSkeleton from "../skeletons/MessagesSkeleton/MessagesSkeleton";
 import Message from "./Message";
 import useServer from "../../zustand/useServer";
 import { useEffect, useMemo, useRef } from "react";
+import useGetUsers from "../../hooks/useGetUsers";
+import { formatTime } from "../../utils/formatTime";
 
 const Messages = () => {
-  const { loading, messages } = useGetMessages();
-  const users = useServer((state) => state.users);
+  const { loading, messages, users } = useGetMessages();
 
   const usersMap = useMemo(
     () =>
@@ -19,17 +20,7 @@ const Messages = () => {
 
   const messagesWithUsers = useMemo(() => {
     return messages.map((message) => {
-      const date = new Date(message.timestamp);
-
-      // Format the date to 'MM/DD/YYYY hh:mm AM/PM'
-      const formatted_date = date.toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
+      const formatted_date = formatTime(message.timestamp);
 
       const { display_username, profile_picture } = usersMap[message.user_id];
       return {

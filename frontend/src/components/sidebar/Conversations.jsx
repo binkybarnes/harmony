@@ -19,7 +19,7 @@ const Conversations = () => {
 
         return (
           <Conversation
-            key={serverIds[i]}
+            key={servers[i].server_id}
             users={users}
             server={servers[i]}
             channel={channelsList[i][0]}

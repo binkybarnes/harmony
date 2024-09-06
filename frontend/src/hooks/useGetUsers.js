@@ -1,37 +1,37 @@
-// import { useEffect, useState } from "react";
-// import useServer from "../zustand/useServer";
-// import toast from "react-hot-toast";
+import { useEffect, useState } from "react";
+import useServer from "../zustand/useServer";
+import toast from "react-hot-toast";
 
-// const useGetUsers = () => {
-//   const [loading, setLoading] = useState(false);
-//   const selectedServer = useServer((state) => state.selectedServer);
-//   const users = useServer((state) => state.users);
-//   const setUsers = useServer((state) => state.setUsers);
+const useGetUsers = () => {
+  const [loading, setLoading] = useState(false);
+  const selectedServer = useServer((state) => state.selectedServer);
+  const users = useServer((state) => state.users);
+  const setUsers = useServer((state) => state.setUsers);
 
-//   useEffect(() => {
-//     if (!selectedServer?.server_id) return;
-//     const getUsers = async () => {
-//       setLoading(true);
-//       try {
-//         const res = await fetch(
-//           `/api/servers/users/${selectedServer.server_id}`,
-//         );
-//         const data = await res.json();
-//         if (!res.ok) throw new Error(data.error);
-//         setUsers(data);
-//       } catch (error) {
-//         toast.error(error.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
+  useEffect(() => {
+    if (!selectedServer?.server_id) return;
+    const getUsers = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/servers/users/${selectedServer.server_id}`,
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setUsers(data);
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-//     getUsers();
-//   }, [selectedServer?.server_id, setUsers]);
-//   return { loading, users };
-// };
+    getUsers();
+  }, [selectedServer?.server_id, setUsers]);
+  return { loading, users };
+};
 
-// export default useGetUsers;
+export default useGetUsers;
 
 // ------------------------------------------------------------
 

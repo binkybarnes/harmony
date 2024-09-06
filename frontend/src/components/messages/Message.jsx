@@ -3,7 +3,7 @@ const Message = ({ message }) => {
   return (
     <div className="relative mt-4 rounded-md pl-16">
       <div className="absolute left-4 w-10 select-none overflow-hidden rounded-md">
-        <img src={message.profile_picture} />
+        <img src={`https://robohash.org/${message.display_username}`} />
       </div>
       <h3 className="relative h-5 leading-[1.25rem]">
         <span className="mr-1 align-baseline font-medium leading-[1.25rem] text-neutral-200">

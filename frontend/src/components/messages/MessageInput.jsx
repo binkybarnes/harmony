@@ -23,11 +23,24 @@ const MessageInput = () => {
     }
   };
 
+  // adjust height to text content height
   useEffect(() => {
     const textarea = textareaRef.current;
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [message]);
+
+  useEffect(() => {
+    const focusTextarea = () => {
+      textareaRef.current.focus();
+    };
+
+    window.addEventListener("keydown", focusTextarea);
+
+    return () => {
+      window.removeEventListener("keydown", focusTextarea);
+    };
+  }, []);
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
