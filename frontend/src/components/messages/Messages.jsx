@@ -5,9 +5,12 @@ import useServer from "../../zustand/useServer";
 import { useEffect, useMemo, useRef } from "react";
 import useGetUsers from "../../hooks/useGetUsers";
 import { formatTime } from "../../utils/formatTime";
+import useListenMessages from "../../hooks/useListenMessages";
 
 const Messages = () => {
   const { loading, messages, users } = useGetMessages();
+  useListenMessages();
+  console.log(messages);
 
   const usersMap = useMemo(
     () =>

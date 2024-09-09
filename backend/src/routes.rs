@@ -36,7 +36,7 @@ pub fn build() -> Rocket<Build> {
                 controllers::server_routes::get_users,
             ],
         )
-        .mount("/", routes![controllers::websockets::chat])
+        .mount("/", routes![controllers::websockets::websocket_handler])
     // .mount(
     //     "/api/channels",
     //     routes![controllers::channel_routes::get_channels],

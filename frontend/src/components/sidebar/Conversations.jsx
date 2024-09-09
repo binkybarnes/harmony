@@ -3,8 +3,11 @@ import Conversation from "./Conversation";
 import toast from "react-hot-toast";
 import { useEffect, useMemo, useState } from "react";
 import useConversationInfo from "../../hooks/useConversationInfo";
+import { useWebsocketContext } from "../../context/WebsocketContext";
 
 const Conversations = () => {
+  useWebsocketContext();
+
   // TODO: put groupchats in here
   const { loading, servers, serverIds, usersList, channelsList } =
     useConversationInfo("Dm");

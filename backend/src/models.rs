@@ -110,16 +110,13 @@ pub struct ServerIds {
     pub server_ids: Vec<i32>,
 }
 
-use std::collections::HashSet;
-use std::sync::{Arc, Mutex};
+use rocket::futures::{stream::SplitSink, SinkExt, StreamExt};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use ws::{stream::DuplexStream, Message as WsMessage};
 
-pub type OnlineUsers = Arc<Mutex<HashSet<i32>>>;
-// Helper function to create a new instance of OnlineUsers
-pub fn new_online_users() -> OnlineUsers {
-    Arc::new(Mutex::new(HashSet::new()))
-}
-
-#[derive(Serialize)]
-pub struct OnlineUsersResponse {
-    pub users: HashSet<i32>,
+pub type StreamMap = Arc<Mutex<HashMap<i32, Vec<Arc<Mutex<SplitSink<DuplexStream, WsMessage>>>>>>>;
+pub fn new_channel_map() -> StreamMap {
+    Arc::new(Mutex::new(HashMap::new()))
 }

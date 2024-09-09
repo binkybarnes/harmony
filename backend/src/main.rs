@@ -1,5 +1,5 @@
 use middleware::cors;
-use models::{new_online_users, OnlineUsers};
+use models::new_channel_map;
 use rocket_db_pools::Database;
 use utils::error_catchers::not_authorized;
 
@@ -25,14 +25,12 @@ async fn index() -> &'static str {
 
 #[launch]
 fn rocket() -> _ {
-    // Create a shared set of online users
-    let online_users: OnlineUsers = new_online_users();
-
     let _ = dotenv::dotenv().ok();
+    let channels = new_channel_map();
     routes::build()
         .attach(database::HarmonyDb::init())
         .attach(cors::Cors)
-        .manage(online_users)
+        .manage(channels)
         .register("/", catchers![not_authorized])
         .mount("/", routes![index])
 }

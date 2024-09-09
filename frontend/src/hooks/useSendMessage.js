@@ -26,7 +26,7 @@ const useSendMessage = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      setMessages([...messages, data]);
+      // setMessages([...messages, data]);
     } catch (error) {
       toast.error(error.message);
     } finally {
