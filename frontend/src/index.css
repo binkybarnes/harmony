@@ -39,7 +39,7 @@ input:focus {
     opacity 75ms;
 }
 
-/* --------------------------------------------- */
+/* server tooltip css transition --------------------------------------------- */
 .server-tooltip-enter {
   opacity: 0;
   transform: scale(0.95);
@@ -58,6 +58,31 @@ input:focus {
 .server-tooltip-exit-active {
   opacity: 0;
   transform: scale(0.95);
+  transition:
+    opacity 75ms,
+    transform 75ms;
+}
+
+/* --------------------------------------------- */
+/* info tooltip css transition --------------------------------------------- */
+.info-tooltip-enter {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.95);
+}
+.info-tooltip-enter-active {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  transition:
+    opacity 75ms,
+    transform 75ms;
+}
+.info-tooltip-exit {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+.info-tooltip-exit-active {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.95);
   transition:
     opacity 75ms,
     transform 75ms;
@@ -104,7 +129,37 @@ input:focus {
     overflow: hidden;
   }
 
+  /* info tooltip --------------------------------------------- */
+
+  .info-tooltip {
+    position: absolute;
+    border-radius: 0.375rem;
+    background-color: brown;
+    padding-block: 0.25rem;
+    padding-inline: 0.5rem;
+    color: white;
+    max-width: 11rem;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 500;
+    transform: translateX(-50%);
+  }
+
+  .info-tooltip::before {
+    content: "";
+    position: absolute;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: brown;
+    top: 100%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%) rotate(45deg);
+    border-radius: 0.05rem;
+  }
+
   /* --------------------------------------------- */
+
+  /* server tooltip --------------------------------------------- */
 
   .server-tooltip {
     position: absolute;

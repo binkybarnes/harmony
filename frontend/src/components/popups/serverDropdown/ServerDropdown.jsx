@@ -7,13 +7,12 @@ import LeaveServer from "./LeaveServer";
 import DropdownItem from "./DropdownItem";
 
 const ServerDropdown = () => {
-  const dropdownRef = useRef();
+  const dropdownRef = useRef(null);
   const { serverDropdown, toggleServerDropdown } = usePopupContext();
 
   // when dropdown visible, click anywhere outside of the dropdown will remove the dropdown
   const handleClickOutside = (event) => {
     if (serverDropdown.visible && !dropdownRef.current.contains(event.target)) {
-      console.log(serverDropdown.visible);
       toggleServerDropdown();
     }
   };

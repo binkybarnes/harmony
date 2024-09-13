@@ -53,6 +53,7 @@ Conversation.propTypes = {
     server_id: PropTypes.number,
     server_type: PropTypes.string,
     members: PropTypes.number,
+    server_name: PropTypes.string,
   }),
   channel: PropTypes.shape({
     channel_id: PropTypes.number,

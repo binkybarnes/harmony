@@ -26,9 +26,15 @@ const useConversationInfo = (serverType) => {
       return null;
     }
   };
-  const fetchChannels = async (queryString) => {
+  const fetchChannels = async (server_ids) => {
     try {
-      const res = await fetch(`/api/servers/channels?${queryString}`);
+      const res = await fetch("/api/servers/channels-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          server_ids,
+        }),
+      });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error);
@@ -40,9 +46,15 @@ const useConversationInfo = (serverType) => {
     }
   };
 
-  const fetchUsers = async (queryString) => {
+  const fetchUsers = async (server_ids) => {
     try {
-      const res = await fetch(`/api/servers/users?${queryString}`);
+      const res = await fetch("/api/servers/users-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          server_ids,
+        }),
+      });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error);
@@ -66,13 +78,9 @@ const useConversationInfo = (serverType) => {
       const serverIds = serversData.map((server) => server.server_id);
       setServerIds(serverIds);
 
-      const params = new URLSearchParams();
-      serverIds.forEach((server_id) => params.append("server_ids", server_id));
-      params.toString();
-
       const [channelsData, usersData] = await Promise.all([
-        fetchChannels(params),
-        fetchUsers(params),
+        fetchChannels(serverIds),
+        fetchUsers(serverIds),
       ]);
 
       setChannelsList(channelsData);

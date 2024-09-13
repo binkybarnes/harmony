@@ -29,7 +29,7 @@ const Conversations = () => {
           />
         );
       }),
-    [usersList, channelsList, serverIds, servers],
+    [usersList, channelsList, servers],
   );
 
   return (

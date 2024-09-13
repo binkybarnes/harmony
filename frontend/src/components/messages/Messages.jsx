@@ -10,7 +10,6 @@ import useListenMessages from "../../hooks/useListenMessages";
 const Messages = () => {
   const { loading, messages, users } = useGetMessages();
   useListenMessages();
-  console.log(messages);
 
   const usersMap = useMemo(
     () =>

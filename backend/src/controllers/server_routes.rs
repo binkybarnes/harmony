@@ -1,5 +1,5 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::models::{Channel, ServerType, User};
+use crate::models::{Channel, ServerIds, ServerType, User};
 use crate::utils::{
     json_error::json_error,
     user_membership::{ByChannel, ByServer, UserMembershipChecker},
@@ -13,6 +13,7 @@ use rocket::response::Responder;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket::Error;
 use rocket_db_pools::Connection;
+use validator::{Validate, ValidationErrors};
 
 // get servers with server_type = sever for user for sidebar
 #[get("/get/<server_type>")]
@@ -35,7 +36,7 @@ pub async fn get_servers(
     let servers = sqlx::query_as!(
         models::Server,
         r#"SELECT 
-        s.server_id, s.server_type AS "server_type!: ServerType", members
+        s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins
         FROM servers s
         JOIN users_servers us ON us.server_id = s.server_id
         WHERE us.user_id = $1 AND s.server_type = $2"#,
@@ -60,7 +61,7 @@ pub async fn join_server(
     let server = sqlx::query_as!(
         models::Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins
         FROM servers WHERE server_id = $1"#,
         server_id
     )
@@ -95,8 +96,13 @@ pub async fn create_server(
     server: Json<models::CreateServerInput>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<(), (Status, Json<ErrorResponse>)> {
+    server
+        .validate()
+        .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
+
     let server_type: ServerType = server.server_type;
     let recipient_ids: &Vec<i32> = &server.recipient_ids;
+    let server_name: &String = &server.server_name;
     let user_id: &i32 = &guard.0.sub;
 
     // validate num recipients given server type
@@ -135,7 +141,7 @@ pub async fn create_server(
     };
 
     // make server
-    let server_id: i32 = create_server_helper(server_type, &mut db).await?;
+    let server_id: i32 = create_server_helper(server_type, server_name, &mut db).await?;
     // make sender join server
     join_server_helper(*user_id, server_id, &mut db).await?;
     // make recipients join server
@@ -153,7 +159,7 @@ async fn create_default_channel(
     // create a channel with name default
     sqlx::query!(
         "INSERT INTO channels (server_id, channel_name)
-    VALUES ($1, 'default')",
+    VALUES ($1, 'general')",
         server_id
     )
     .execute(&mut ***db)
@@ -170,16 +176,18 @@ async fn create_default_channel(
 
 async fn create_server_helper(
     server_type: ServerType,
+    server_name: &String,
     db: &mut Connection<database::HarmonyDb>,
 ) -> Result<i32, (Status, Json<ErrorResponse>)> {
     // make server
     // num members initially 0, members will be incremented in join_server
     let server = sqlx::query_as!(
         models::Server,
-        r#"INSERT INTO public.servers (server_type, members)
-        VALUES ($1, 0) 
-        RETURNING server_id, server_type AS "server_type!: ServerType", members"#,
-        server_type as ServerType
+        r#"INSERT INTO public.servers (server_type, members, server_name)
+        VALUES ($1, 0, $2) 
+        RETURNING server_id, server_type AS "server_type!: ServerType", members, server_name, admins"#,
+        server_type as ServerType,
+        server_name
     )
     .fetch_one(&mut ***db)
     .await
@@ -227,18 +235,27 @@ async fn join_server_helper(
 }
 
 // CHANNELS -----------------------------------------------------------------
-
-// get channels list given server_id list
-#[get("/channels?<server_ids>")]
+// get channels given 1 server_id
+#[get("/channels/<server_id>")]
+pub async fn get_channels(
+    guard: JwtGuard,
+    server_id: i32,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Vec<Channel>>, (Status, Json<ErrorResponse>)> {
+    let channels = get_channels_helper(server_id, &mut db).await?;
+    Ok(Json(channels))
+}
+// get list of channels list given server_id list
+#[post("/channels-list", format = "json", data = "<server_ids_json>")]
 pub async fn get_channels_list(
     guard: JwtGuard,
-    server_ids: Vec<i32>,
+    server_ids_json: Json<ServerIds>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<Vec<Channel>>>, (Status, Json<ErrorResponse>)> {
     // let user_id = &guard.0.sub;
 
     let mut channels_list: Vec<Vec<Channel>> = Vec::new();
-    for server_id in server_ids.iter() {
+    for server_id in server_ids_json.server_ids.iter() {
         // let server_checker = ByServer {
         //     server_id: *server_id,
         // };
@@ -280,13 +297,13 @@ pub async fn get_users(
 }
 
 // get list of users given vector of server_ids
-#[get("/users?<server_ids>")]
+#[post("/users-list", format = "json", data = "<server_ids_json>")]
 pub async fn get_users_list(
-    server_ids: Vec<i32>,
+    server_ids_json: Json<ServerIds>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<Vec<User>>>, (Status, Json<ErrorResponse>)> {
     let mut users_list: Vec<Vec<User>> = Vec::new();
-    for server_id in &server_ids {
+    for server_id in &server_ids_json.server_ids {
         let users = get_users_helper(*server_id, &mut db).await?;
         users_list.push(users);
     }

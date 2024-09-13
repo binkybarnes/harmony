@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 const PopupContext = createContext(null);
 
 const PopupProvider = ({ children }) => {
+  // Server Tooltip --------------------------------------------------------
   const [serverTooltip, setServerTooltip] = useState({
     visible: false,
     name: "",
@@ -13,14 +14,25 @@ const PopupProvider = ({ children }) => {
     setServerTooltip({
       visible: isHovered,
       name: name,
-      position: {
-        top: position.top,
-        height: position.height,
-        left: position.right,
-      },
+      position: position,
     });
   };
 
+  // Info Tooltip --------------------------------------------------------
+  const [infoTooltip, setInfoTooltip] = useState({
+    visible: false,
+    name: "",
+    position: {},
+  });
+  const handleInfoHover = (isHovered, name, position) => {
+    setInfoTooltip({
+      visible: isHovered,
+      name: name,
+      position: position,
+    });
+  };
+
+  // Server Dropdown --------------------------------------------------------
   const [serverDropdown, setServerDropdown] = useState({
     visible: false,
     ref: null,
@@ -40,6 +52,8 @@ const PopupProvider = ({ children }) => {
         handleServerHover,
         serverDropdown,
         toggleServerDropdown,
+        infoTooltip,
+        handleInfoHover,
       }}
     >
       {children}

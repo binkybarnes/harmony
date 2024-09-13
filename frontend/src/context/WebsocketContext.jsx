@@ -13,7 +13,7 @@ export const WebsocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser) {
-      const ws = new WebSocket(`http://127.0.0.1:5000/ws/${7}`);
+      const ws = new WebSocket(`http://127.0.0.1:5000/ws/chat/${7}`);
 
       //   ws.onmessage = (event) => {
       //     try {

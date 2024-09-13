@@ -90,6 +90,8 @@ pub struct Server {
     pub server_id: i32,
     pub server_type: ServerType,
     pub members: i32,
+    pub server_name: String,
+    pub admins: Vec<i32>,
 }
 
 #[derive(Serialize)]
@@ -99,10 +101,12 @@ pub struct Channel {
     pub channel_name: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct CreateServerInput {
     pub recipient_ids: Vec<i32>,
     pub server_type: ServerType,
+    #[validate(length(min = 1, max = 30))]
+    pub server_name: String,
 }
 
 #[derive(Deserialize)]
@@ -110,13 +114,30 @@ pub struct ServerIds {
     pub server_ids: Vec<i32>,
 }
 
-use rocket::futures::{stream::SplitSink, SinkExt, StreamExt};
+// websocket stuff
+
+use rocket::futures::stream::SplitSink;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use ws::{stream::DuplexStream, Message as WsMessage};
 
-pub type StreamMap = Arc<Mutex<HashMap<i32, Vec<Arc<Mutex<SplitSink<DuplexStream, WsMessage>>>>>>>;
-pub fn new_channel_map() -> StreamMap {
+// maps channel_id to list of websocket send connections
+pub type ChannelStreamMap =
+    Arc<Mutex<HashMap<i32, Vec<Arc<Mutex<SplitSink<DuplexStream, WsMessage>>>>>>>;
+pub fn new_channel_stream_map() -> ChannelStreamMap {
     Arc::new(Mutex::new(HashMap::new()))
 }
+
+// #[derive(Deserialize)]
+// pub struct ChatWSInput {
+//     pub user_id: i32,
+//     pub channel_id: i32,
+// }
+
+// #[derive(Deserialize)]
+// pub struct UpdateChannelInput {
+//     pub user_id: i32,
+//     pub prev_channel_id: i32,
+//     pub new_channel_id: i32,
+// }

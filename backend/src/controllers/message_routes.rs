@@ -1,5 +1,4 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::models::StreamMap;
 use crate::{
     database,
     models::{self, ErrorResponse},
@@ -22,7 +21,7 @@ pub async fn send_message(
     channel_id: i32,
     message: Json<models::SendMessageInput>,
     mut db: Connection<database::HarmonyDb>,
-    state: &rocket::State<StreamMap>,
+    // state: &rocket::State<UserStreamMap>,
 ) -> Result<(Status, Json<models::Message>), (Status, Json<ErrorResponse>)> {
     let user_id = &guard.0.sub;
 
@@ -51,19 +50,19 @@ pub async fn send_message(
         )
     })?;
 
-    // Broadcast the message to all connected clients in the channel
-    let state = state.inner().clone();
-    {
-        let mut channels = state.lock().await;
-        if let Some(senders) = channels.get_mut(&channel_id) {
-            for sender in senders.iter() {
-                let mut sender = sender.lock().await;
-                if let Err(e) = sender.send(message_json.clone().into()).await {
-                    eprintln!("Failed to send message to a client: {:?}", e);
-                }
-            }
-        }
-    }
+    // // Broadcast the message to all connected clients in the channel
+    // let state = state.inner().clone();
+    // {
+    //     let mut channels = state.lock().await;
+    //     if let Some(senders) = channels.get_mut(&channel_id) {
+    //         for sender in senders.iter() {
+    //             let mut sender = sender.lock().await;
+    //             if let Err(e) = sender.send(message_json.clone().into()).await {
+    //                 eprintln!("Failed to send message to a client: {:?}", e);
+    //             }
+    //         }
+    //     }
+    // }
 
     // Ok::<_, (Status, Json<ErrorResponse>)>(status::Created::new("/send").body(Json(message)))
     Ok::<_, (Status, Json<ErrorResponse>)>((Status::Created, Json(message)))

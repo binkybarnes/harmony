@@ -5,6 +5,7 @@ import ServerDropdown from "../../components/popups/serverDropdown/ServerDropdow
 import Sidebar from "../../components/sidebar/Sidebar";
 import { PopupProvider } from "../../components/popups/PopupContext";
 import DiscoverServers from "../../components/joinserver/DiscoverServers";
+import InfoTooltip from "../../components/popups/tooltip/InfoTooltip";
 
 const Home = () => {
   return (
@@ -17,6 +18,7 @@ const Home = () => {
         <MessageContainer />
 
         <div className="select-none">
+          <InfoTooltip />
           <ServerTooltip />
           <ServerDropdown />
         </div>
