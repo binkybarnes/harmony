@@ -1,6 +1,6 @@
 import { RiArrowDropDownLine } from "react-icons/ri";
-import { usePopupContext } from "../popups/PopupContext";
-import useServer from "../../zustand/useServer";
+import { usePopupContext } from "../../popups/PopupContext";
+import useServer from "../../../zustand/useServer";
 
 const ServerHeader = () => {
   const { toggleServerDropdown } = usePopupContext();

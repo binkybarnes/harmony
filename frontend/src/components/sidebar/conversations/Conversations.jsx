@@ -2,8 +2,8 @@ import Conversation from "./Conversation";
 
 import toast from "react-hot-toast";
 import { useEffect, useMemo, useState } from "react";
-import useConversationInfo from "../../hooks/useConversationInfo";
-import { useWebsocketContext } from "../../context/WebsocketContext";
+import useConversationInfo from "../../../hooks/useConversationInfo";
+import { useWebsocketContext } from "../../../context/WebsocketContext";
 
 const Conversations = () => {
   useWebsocketContext();

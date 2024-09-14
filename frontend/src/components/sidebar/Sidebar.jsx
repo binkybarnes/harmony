@@ -1,8 +1,8 @@
-import Channels from "./Channels";
+import Channels from "./servers/Channels";
 import Profilebar from "./Profilebar";
-import SearchInput from "./SearchInput";
-import ServerHeader from "./ServerHeader";
-import Conversations from "./Conversations";
+import SearchInput from "./conversations/SearchInput";
+import ServerHeader from "./servers/ServerHeader";
+import Conversations from "./conversations/Conversations";
 import useServer from "../../zustand/useServer";
 const Sidebar = () => {
   const selectedServer = useServer((state) => state.selectedServer);

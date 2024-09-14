@@ -114,6 +114,12 @@ pub struct ServerIds {
     pub server_ids: Vec<i32>,
 }
 
+#[derive(Deserialize, Validate)]
+pub struct CreateChannelInput {
+    pub server_id: i32,
+    #[validate(length(min = 1, max = 30))]
+    pub channel_name: String,
+}
 // websocket stuff
 
 use rocket::futures::stream::SplitSink;

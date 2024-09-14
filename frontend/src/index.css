@@ -90,6 +90,50 @@ input:focus {
 
 /* --------------------------------------------- */
 
+/* create channel menu css transition --------------------------------------------- */
+
+.channel-menu-enter {
+  opacity: 0;
+  transform: scale(0.5);
+}
+.channel-menu-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 75ms,
+    transform 75ms;
+}
+.channel-menu-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+.channel-menu-exit-active {
+  opacity: 0;
+  transform: scale(0.5);
+  transition:
+    opacity 75ms,
+    transform 75ms;
+}
+
+/* modal overlay css transition --------------------------------------------- */
+
+.modal-overlay-enter {
+  opacity: 0;
+}
+.modal-overlay-enter-active {
+  opacity: 0.65;
+  transition: opacity 200ms;
+}
+.modal-overlay-exit {
+  opacity: 0.65;
+}
+.modal-overlay-exit-active {
+  opacity: 0;
+  transition: opacity 200ms;
+}
+
+/* --------------------------------------------- */
+
 @layer utilities {
   /* --------------------------------------------- */
 

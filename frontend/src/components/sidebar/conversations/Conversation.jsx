@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
-import useServer from "../../zustand/useServer";
-import { useAuthContext } from "../../context/AuthContext";
+import useServer from "../../../zustand/useServer";
+import { useAuthContext } from "../../../context/AuthContext";
 
 // conversation is a Server that is type DM or GroupChat, and they have only 1 channel
 const Conversation = ({ users, server, channel }) => {

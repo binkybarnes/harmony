@@ -31,6 +31,7 @@ pub fn build() -> Rocket<Build> {
                 controllers::server_routes::get_servers,
                 controllers::server_routes::join_server,
                 controllers::server_routes::create_server,
+                controllers::server_routes::create_channel,
                 controllers::server_routes::get_channels_list,
                 controllers::server_routes::get_channels,
                 controllers::server_routes::get_users_list,

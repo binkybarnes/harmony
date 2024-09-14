@@ -6,6 +6,8 @@ import Sidebar from "../../components/sidebar/Sidebar";
 import { PopupProvider } from "../../components/popups/PopupContext";
 import DiscoverServers from "../../components/joinserver/DiscoverServers";
 import InfoTooltip from "../../components/popups/tooltip/InfoTooltip";
+import CreateChannelMenu from "../../components/popups/createChannel/CreateChannelMenu";
+import ModalOverlay from "../../components/popups/createChannel/ModalOverlay";
 
 const Home = () => {
   return (
@@ -21,6 +23,8 @@ const Home = () => {
           <InfoTooltip />
           <ServerTooltip />
           <ServerDropdown />
+          <ModalOverlay />
+          <CreateChannelMenu />
         </div>
       </PopupProvider>
     </div>

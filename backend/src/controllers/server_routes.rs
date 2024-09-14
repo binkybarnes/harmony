@@ -1,5 +1,5 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::models::{Channel, ServerIds, ServerType, User};
+use crate::models::{Channel, CreateChannelInput, Server, ServerIds, ServerType, User};
 use crate::utils::{
     json_error::json_error,
     user_membership::{ByChannel, ByServer, UserMembershipChecker},
@@ -95,7 +95,7 @@ pub async fn create_server(
     guard: JwtGuard,
     server: Json<models::CreateServerInput>,
     mut db: Connection<database::HarmonyDb>,
-) -> Result<(), (Status, Json<ErrorResponse>)> {
+) -> Result<Json<Server>, (Status, Json<ErrorResponse>)> {
     server
         .validate()
         .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
@@ -141,7 +141,8 @@ pub async fn create_server(
     };
 
     // make server
-    let server_id: i32 = create_server_helper(server_type, server_name, &mut db).await?;
+    let server = create_server_helper(server_type, server_name, &mut db).await?;
+    let server_id: i32 = server.server_id;
     // make sender join server
     join_server_helper(*user_id, server_id, &mut db).await?;
     // make recipients join server
@@ -149,20 +150,24 @@ pub async fn create_server(
         join_server_helper(*recipient, server_id, &mut db).await?;
     }
 
-    Ok(())
+    Ok(Json(server))
 }
 
-async fn create_default_channel(
+async fn create_channel_helper(
     server_id: i32,
+    channel_name: &str,
     db: &mut Connection<database::HarmonyDb>,
-) -> Result<(), (Status, Json<ErrorResponse>)> {
+) -> Result<Channel, (Status, Json<ErrorResponse>)> {
     // create a channel with name default
-    sqlx::query!(
+    let channel = sqlx::query_as!(
+        Channel,
         "INSERT INTO channels (server_id, channel_name)
-    VALUES ($1, 'general')",
-        server_id
+        VALUES ($1, $2)
+        RETURNING *",
+        server_id,
+        channel_name
     )
-    .execute(&mut ***db)
+    .fetch_one(&mut ***db)
     .await
     .map_err(|_| {
         (
@@ -171,14 +176,14 @@ async fn create_default_channel(
         )
     })?;
 
-    Ok(())
+    Ok(channel)
 }
 
 async fn create_server_helper(
     server_type: ServerType,
     server_name: &String,
     db: &mut Connection<database::HarmonyDb>,
-) -> Result<i32, (Status, Json<ErrorResponse>)> {
+) -> Result<Server, (Status, Json<ErrorResponse>)> {
     // make server
     // num members initially 0, members will be incremented in join_server
     let server = sqlx::query_as!(
@@ -194,9 +199,9 @@ async fn create_server_helper(
     .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
     let server_id: i32 = server.server_id;
 
-    create_default_channel(server_id, db).await?;
+    create_channel_helper(server_id, "general", db).await?;
 
-    Ok(server_id)
+    Ok(server)
 }
 async fn join_server_helper(
     user_id: i32,
@@ -282,6 +287,25 @@ async fn get_channels_helper(
     .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
 
     Ok(channels)
+}
+
+// create channel
+// TODO check if the user is an admin in the server
+#[post("/channels/create", format = "json", data = "<channel_json>")]
+pub async fn create_channel(
+    channel_json: Json<CreateChannelInput>,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Channel>, (Status, Json<ErrorResponse>)> {
+    channel_json
+        .validate()
+        .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
+
+    let server_id: i32 = channel_json.server_id;
+    let channel_name: &String = &channel_json.channel_name;
+
+    let channel = create_channel_helper(server_id, channel_name, &mut db).await?;
+
+    Ok(Json(channel))
 }
 
 // USERS -----------------------------------------------------------------

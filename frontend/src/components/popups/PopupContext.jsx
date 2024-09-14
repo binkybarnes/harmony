@@ -41,7 +41,29 @@ const PopupProvider = ({ children }) => {
   const toggleServerDropdown = () => {
     setServerDropdown((prev) => ({
       ...prev,
-      visible: !serverDropdown.visible,
+      visible: !prev.visible,
+    }));
+  };
+
+  // Create Channel Menu --------------------------------------------------------
+  const [channelMenu, setChannelMenu] = useState({
+    visible: false,
+  });
+
+  const setChannelMenuVisible = (visible) => {
+    setChannelMenu(() => ({
+      visible,
+    }));
+  };
+
+  // Modal Overlay  --------------------------------------------------------
+  const [modalOverlay, setModalOverlay] = useState({
+    visible: false,
+  });
+
+  const setModalOverlayVisible = (visible) => {
+    setModalOverlay(() => ({
+      visible,
     }));
   };
 
@@ -54,6 +76,10 @@ const PopupProvider = ({ children }) => {
         toggleServerDropdown,
         infoTooltip,
         handleInfoHover,
+        channelMenu,
+        setChannelMenuVisible,
+        modalOverlay,
+        setModalOverlayVisible,
       }}
     >
       {children}
