@@ -50,10 +50,10 @@ pub async fn get_servers(
     Ok(Json(servers))
 }
 
-#[get("/search?<search_term>")]
-pub async fn search_servers(
+#[get("/searchName?<name>")]
+pub async fn search_servers_name(
     _guard: JwtGuard,
-    search_term: String,
+    name: String,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<Server>>, (Status, Json<ErrorResponse>)> {
     let servers = sqlx::query_as!(
@@ -61,10 +61,53 @@ pub async fn search_servers(
         r#"SELECT
         server_id, server_type AS "server_type!: ServerType", members, server_name, admins
         FROM servers
-        WHERE server_name % $1
-        ORDER BY SIMILARITY(server_name, $1) DESC
+        WHERE server_type = 'server' AND server_name % $1
+        ORDER BY (SIMILARITY(server_name, 'skibidi') * 0.3 + LOG(members + 1) * 0.7) DESC
         LIMIT 100"#,
-        search_term
+        name
+    )
+    .fetch_all(&mut **db)
+    .await
+    .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+
+    Ok(Json(servers))
+}
+
+// TODO: maybe fuzzy search ID?
+#[get("/searchId?<id>")]
+pub async fn search_servers_id(
+    _guard: JwtGuard,
+    id: i32,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Vec<Server>>, (Status, Json<ErrorResponse>)> {
+    let servers = sqlx::query_as!(
+        Server,
+        r#"SELECT
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins
+        FROM servers
+        WHERE server_type = 'server' AND server_id = $1"#,
+        id
+    )
+    .fetch_all(&mut **db)
+    .await
+    .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+
+    Ok(Json(servers))
+}
+
+// get the top 50 servers with the most members
+#[get("/popular")]
+pub async fn get_servers_popular(
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Vec<Server>>, (Status, Json<ErrorResponse>)> {
+    let servers = sqlx::query_as!(
+        Server,
+        r#"
+        SELECT server_id, server_type AS "server_type!: ServerType", members, server_name, admins
+        FROM SERVERS
+        WHERE server_type = 'server'
+        ORDER BY members DESC
+        LIMIT 50"#
     )
     .fetch_all(&mut **db)
     .await

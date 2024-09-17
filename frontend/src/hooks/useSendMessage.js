@@ -4,8 +4,6 @@ import toast from "react-hot-toast";
 
 const useSendMessage = () => {
   const [loading, setLoading] = useState(false);
-  const messages = useServer((state) => state.messages);
-  const setMessages = useServer((state) => state.setMessages);
   const selectedChannel = useServer((state) => state.selectedChannel);
   const selectedServer = useServer((state) => state.selectedServer);
 
@@ -25,8 +23,6 @@ const useSendMessage = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-
-      // setMessages([...messages, data]);
     } catch (error) {
       toast.error(error.message);
     } finally {

@@ -51,7 +51,6 @@ const CreateServerMenu = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(serverName.length);
     if (serverName.length > 30) {
       toast.error("Server name too long");
     } else {

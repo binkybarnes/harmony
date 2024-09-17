@@ -29,7 +29,9 @@ pub fn build() -> Rocket<Build> {
             "/api/servers",
             routes![
                 controllers::server_routes::get_servers,
-                controllers::server_routes::search_servers,
+                controllers::server_routes::get_servers_popular,
+                controllers::server_routes::search_servers_name,
+                controllers::server_routes::search_servers_id,
                 controllers::server_routes::join_server,
                 controllers::server_routes::create_server,
                 controllers::server_routes::create_channel,
