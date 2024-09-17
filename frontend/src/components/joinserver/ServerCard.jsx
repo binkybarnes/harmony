@@ -2,6 +2,7 @@ const ServerCard = () => {
   return (
     <div className="server-card flex w-48 flex-col overflow-hidden rounded-md bg-red-500 hover:cursor-pointer">
       <img
+        draggable={false}
         className="h-48 w-full object-cover"
         src="https://cdn.discordapp.com/discovery-splashes/662267976984297473/4798759e115d2500fef16347d578729a.jpg?size=600"
       />

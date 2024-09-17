@@ -1,4 +1,5 @@
 use crate::middleware::protect_route::JwtGuard;
+use crate::models::{ServerSessionIdMap, SessionIdWebsocketMap};
 use crate::{
     database,
     models::{self, ErrorResponse},
@@ -15,15 +16,18 @@ use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket_db_pools::Connection;
 use utils::user_membership::{ByChannel, ByServer, UserMembershipChecker};
 
-#[post("/send/<channel_id>", format = "json", data = "<message>")]
+#[post("/send", format = "json", data = "<message_json>")]
 pub async fn send_message(
     guard: JwtGuard,
-    channel_id: i32,
-    message: Json<models::SendMessageInput>,
+    message_json: Json<models::SendMessageInput>,
     mut db: Connection<database::HarmonyDb>,
-    // state: &rocket::State<UserStreamMap>,
+    websocket_map_state: &rocket::State<SessionIdWebsocketMap>,
+    server_map_state: &rocket::State<ServerSessionIdMap>,
 ) -> Result<(Status, Json<models::Message>), (Status, Json<ErrorResponse>)> {
     let user_id = &guard.0.sub;
+    let channel_id = message_json.channel_id;
+    let server_id = message_json.server_id;
+    let message = &message_json.message;
 
     // check if user is in the server that has the channel the message is being sent to
     let channel_checker = ByChannel { channel_id };
@@ -36,7 +40,7 @@ pub async fn send_message(
         RETURNING *",
         user_id,
         channel_id,
-        message.message
+        message
     )
     .fetch_one(&mut **db)
     .await
@@ -49,6 +53,32 @@ pub async fn send_message(
             json_error("serialization error"),
         )
     })?;
+
+    let websocket_map_state = websocket_map_state.inner().clone();
+    let server_map_state = server_map_state.inner().clone();
+    {
+        let websocket_map = websocket_map_state.lock().await;
+        let server_map = server_map_state.lock().await;
+
+        if let Some(arc_mutex_vec) = server_map.get(&server_id) {
+            let senders_session_id = arc_mutex_vec.lock().await;
+            for sender_session_id in senders_session_id.iter() {
+                if let Some(sender_arc_mutex) = websocket_map.get(sender_session_id) {
+                    let mut sender = sender_arc_mutex.lock().await;
+                    if let Err(e) = sender.send(message_json.clone().into()).await {
+                        eprintln!("Error sending message: {:?}", e);
+                    }
+                } else {
+                    println!(
+                        "No WebSocket sender found for session ID: {:?}",
+                        sender_session_id
+                    );
+                }
+            }
+        } else {
+            println!("No session IDs found for server ID: {:?}", server_id);
+        }
+    }
 
     // // Broadcast the message to all connected clients in the channel
     // let state = state.inner().clone();

@@ -12,7 +12,7 @@ const CreateChannelButton = () => {
     handleInfoHover(false, "Create Channel", {});
   };
 
-  const handleMouseDown = (event) => {
+  const handleClick = (event) => {
     event.stopPropagation();
     setModalOverlayVisible(true);
     setChannelMenuVisible(true);
@@ -22,7 +22,7 @@ const CreateChannelButton = () => {
     <IoIosAdd
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onMouseDown={handleMouseDown}
+      onClick={handleClick}
       className="hover:text-yellow-400 active:text-cyan-300"
       size={24}
     />

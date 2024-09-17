@@ -7,7 +7,7 @@ const SearchInput = () => {
         <input
           type="text"
           placeholder="Search..."
-          className="flex-1 bg-base-100 px-2"
+          className="h-full flex-1 bg-base-100 px-2"
         />
         <IoSearchOutline className="flex-shrink-0" size={20} />
       </div>

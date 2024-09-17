@@ -50,6 +50,29 @@ pub async fn get_servers(
     Ok(Json(servers))
 }
 
+#[get("/search?<search_term>")]
+pub async fn search_servers(
+    _guard: JwtGuard,
+    search_term: String,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Vec<Server>>, (Status, Json<ErrorResponse>)> {
+    let servers = sqlx::query_as!(
+        Server,
+        r#"SELECT
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins
+        FROM servers
+        WHERE server_name % $1
+        ORDER BY SIMILARITY(server_name, $1) DESC
+        LIMIT 100"#,
+        search_term
+    )
+    .fetch_all(&mut **db)
+    .await
+    .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+
+    Ok(Json(servers))
+}
+
 #[post("/join/<server_id>")]
 pub async fn join_server(
     guard: JwtGuard,
@@ -141,7 +164,7 @@ pub async fn create_server(
     };
 
     // make server
-    let server = create_server_helper(server_type, server_name, &mut db).await?;
+    let server = create_server_helper(server_type, server_name, *user_id, &mut db).await?;
     let server_id: i32 = server.server_id;
     // make sender join server
     join_server_helper(*user_id, server_id, &mut db).await?;
@@ -182,17 +205,19 @@ async fn create_channel_helper(
 async fn create_server_helper(
     server_type: ServerType,
     server_name: &String,
+    user_id: i32,
     db: &mut Connection<database::HarmonyDb>,
 ) -> Result<Server, (Status, Json<ErrorResponse>)> {
     // make server
     // num members initially 0, members will be incremented in join_server
     let server = sqlx::query_as!(
         models::Server,
-        r#"INSERT INTO public.servers (server_type, members, server_name)
-        VALUES ($1, 0, $2) 
+        r#"INSERT INTO public.servers (server_type, members, server_name, admins)
+        VALUES ($1, 0, $2, ARRAY[$3]::integer[]) 
         RETURNING server_id, server_type AS "server_type!: ServerType", members, server_name, admins"#,
         server_type as ServerType,
-        server_name
+        server_name,
+        user_id
     )
     .fetch_one(&mut ***db)
     .await
@@ -243,7 +268,7 @@ async fn join_server_helper(
 // get channels given 1 server_id
 #[get("/channels/<server_id>")]
 pub async fn get_channels(
-    guard: JwtGuard,
+    _guard: JwtGuard,
     server_id: i32,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<Channel>>, (Status, Json<ErrorResponse>)> {
@@ -253,7 +278,7 @@ pub async fn get_channels(
 // get list of channels list given server_id list
 #[post("/channels-list", format = "json", data = "<server_ids_json>")]
 pub async fn get_channels_list(
-    guard: JwtGuard,
+    _guard: JwtGuard,
     server_ids_json: Json<ServerIds>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<Vec<Channel>>>, (Status, Json<ErrorResponse>)> {
@@ -293,6 +318,7 @@ async fn get_channels_helper(
 // TODO check if the user is an admin in the server
 #[post("/channels/create", format = "json", data = "<channel_json>")]
 pub async fn create_channel(
+    _guard: JwtGuard,
     channel_json: Json<CreateChannelInput>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Channel>, (Status, Json<ErrorResponse>)> {
@@ -313,6 +339,7 @@ pub async fn create_channel(
 // get users given one server_id
 #[get("/users/<server_id>")]
 pub async fn get_users(
+    _guard: JwtGuard,
     server_id: i32,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<User>>, (Status, Json<ErrorResponse>)> {
@@ -323,6 +350,7 @@ pub async fn get_users(
 // get list of users given vector of server_ids
 #[post("/users-list", format = "json", data = "<server_ids_json>")]
 pub async fn get_users_list(
+    _guard: JwtGuard,
     server_ids_json: Json<ServerIds>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Vec<Vec<User>>>, (Status, Json<ErrorResponse>)> {

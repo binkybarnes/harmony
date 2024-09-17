@@ -7,22 +7,22 @@ const useSendMessage = () => {
   const messages = useServer((state) => state.messages);
   const setMessages = useServer((state) => state.setMessages);
   const selectedChannel = useServer((state) => state.selectedChannel);
+  const selectedServer = useServer((state) => state.selectedServer);
 
   const sendMessage = async (message) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/messages/send/${selectedChannel.channel_id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message,
-          }),
+      const res = await fetch(`/api/messages/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          channel_id: selectedChannel.channel_id,
+          server_id: selectedServer.server_id,
+          message,
+        }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 

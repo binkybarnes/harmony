@@ -56,6 +56,17 @@ const PopupProvider = ({ children }) => {
     }));
   };
 
+  // Create Channel Menu --------------------------------------------------------
+  const [serverMenu, setServerMenu] = useState({
+    visible: false,
+  });
+
+  const setServerMenuVisible = (visible) => {
+    setServerMenu(() => ({
+      visible,
+    }));
+  };
+
   // Modal Overlay  --------------------------------------------------------
   const [modalOverlay, setModalOverlay] = useState({
     visible: false,
@@ -80,6 +91,8 @@ const PopupProvider = ({ children }) => {
         setChannelMenuVisible,
         modalOverlay,
         setModalOverlayVisible,
+        serverMenu,
+        setServerMenuVisible,
       }}
     >
       {children}

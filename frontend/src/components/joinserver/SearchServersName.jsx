@@ -16,7 +16,7 @@ const SearchServersName = () => {
         <input
           type="text"
           placeholder={`Search server ${searchName ? "name" : "ID"}...`}
-          className="flex-1 bg-neutral-700"
+          className="h-full flex-1 bg-neutral-700"
         />
         <IoSearchOutline className="flex-shrink-0" size={20} />
       </div>

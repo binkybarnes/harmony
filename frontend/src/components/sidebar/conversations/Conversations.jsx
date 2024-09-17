@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import useConversationInfo from "../../../hooks/useConversationInfo";
 import { useWebsocketContext } from "../../../context/WebsocketContext";
 
+// TODO: START CACHEING EVERYTHING
 const Conversations = () => {
   useWebsocketContext();
 

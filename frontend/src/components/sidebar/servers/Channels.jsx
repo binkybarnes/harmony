@@ -3,14 +3,12 @@ import useGetChannels from "../../../hooks/useGetChannels";
 import useServer from "../../../zustand/useServer";
 import Channel from "./Channel";
 import CreateChannelButton from "./CreateChannelButton";
-import CreateChannelMenu from "../../popups/createChannel/CreateChannelMenu";
 import { useAuthContext } from "../../../context/AuthContext";
 
 const Channels = () => {
   const { authUser } = useAuthContext();
   const selectedServer = useServer((state) => state.selectedServer);
   const { loading, channels } = useGetChannels(selectedServer.server_id);
-  const { createChannelVisible, setCreateChannelVisible } = useState(false);
 
   const mapChannels = channels.map((channel) => (
     <Channel key={channel.channel_id} channel={channel} />

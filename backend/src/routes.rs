@@ -29,6 +29,7 @@ pub fn build() -> Rocket<Build> {
             "/api/servers",
             routes![
                 controllers::server_routes::get_servers,
+                controllers::server_routes::search_servers,
                 controllers::server_routes::join_server,
                 controllers::server_routes::create_server,
                 controllers::server_routes::create_channel,
@@ -38,7 +39,7 @@ pub fn build() -> Rocket<Build> {
                 controllers::server_routes::get_users,
             ],
         )
-    // .mount("/ws", routes![controllers::websockets::websocket_handler])
+        .mount("/ws", routes![controllers::websockets::websocket_handler])
     // .mount(
     //     "/api/channels",
     //     routes![controllers::channel_routes::get_channels],

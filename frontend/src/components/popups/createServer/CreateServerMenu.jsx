@@ -1,31 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TbBrandAmongUs } from "react-icons/tb";
 import { CSSTransition } from "react-transition-group";
 import { IoIosClose } from "react-icons/io";
 import PropTypes from "prop-types";
 import { usePopupContext } from "../PopupContext";
-import useCreateChannel from "../../../hooks/useCreateChannel";
 import useServer from "../../../zustand/useServer";
 import toast from "react-hot-toast";
-const CreateChannelMenu = () => {
+import { useAuthContext } from "../../../context/AuthContext";
+import useCreateServer from "../../../hooks/useCreateServer";
+import UploadImageIcon from "./UploadImageIcon";
+
+const CreateServerMenu = () => {
   const menuRef = useRef(null);
-  const inputRef = useRef(null);
   const selectedServer = useServer((state) => state.selectedServer);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
-  const { loading, createChannel } = useCreateChannel();
-  const { channelMenu, setChannelMenuVisible, setModalOverlayVisible } =
+  const { loading, createServer } = useCreateServer();
+  const { serverMenu, setServerMenuVisible, setModalOverlayVisible } =
     usePopupContext();
 
-  const [channelName, setChannelName] = useState("");
+  const { authUser } = useAuthContext();
+  const inputRef = useRef(null);
+
+  const [serverName, setServerName] = useState("");
 
   const handleInputChange = useCallback((event) => {
-    setChannelName(event.target.value);
+    setServerName(event.target.value);
   }, []);
 
   const onClose = useCallback(() => {
-    setChannelMenuVisible(false);
+    setServerMenuVisible(false);
     setModalOverlayVisible(false);
-  }, [setChannelMenuVisible, setModalOverlayVisible]);
+  }, [setServerMenuVisible, setModalOverlayVisible]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -47,25 +51,25 @@ const CreateChannelMenu = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(channelName.length);
-    if (channelName.length > 30) {
-      toast.error("Channel name too long");
+    console.log(serverName.length);
+    if (serverName.length > 30) {
+      toast.error("Server name too long");
     } else {
-      await createChannel(selectedServer.server_id, channelName);
+      await createServer(serverName);
       onClose();
     }
   };
 
   return (
     <CSSTransition
-      in={channelMenu.visible}
+      in={serverMenu.visible}
       nodeRef={menuRef}
       timeout={200}
       classNames="channel-menu"
       unmountOnExit
       onEntering={() => {
         setButtonsDisabled(true);
-        setChannelName("");
+        setServerName(`${authUser.display_username}'s server`);
       }}
       onEntered={() => setButtonsDisabled(false)}
       onExiting={() => setButtonsDisabled(true)}
@@ -75,25 +79,35 @@ const CreateChannelMenu = () => {
           <fieldset disabled={buttonsDisabled}>
             <div className="w-[460px] rounded-md bg-green-200 p-4">
               <div className="mb-4 flex items-center justify-between">
-                <h1 className="text-xl font-medium">Create Channel</h1>
+                <h1 className="text-xl font-medium">Create Server</h1>
                 <button onClick={onClose} className="hover:text-green-500">
                   <IoIosClose className="flex-shrink-0" size={40} />
                 </button>
               </div>
-              <div className="mb-8">
-                <h2 className="mb-2 text-xs font-bold">CHANNEL NAME</h2>
-                <div className="flex h-10 items-center gap-2 rounded-md bg-base-100 pl-2">
-                  <TbBrandAmongUs className="flex-shrink-0" size={20} />
+              <div className="mb-4 flex justify-center">
+                <div className="relative h-[80px] w-[80px]">
+                  <UploadImageIcon />
                   <input
-                    ref={inputRef}
-                    value={channelName}
-                    onChange={handleInputChange}
-                    type="text"
-                    placeholder="new-channel"
-                    className="h-full flex-1 bg-transparent"
+                    style={{ fontSize: "0px" }}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.gif"
+                    className="absolute top-0 h-full w-full opacity-0 hover:cursor-pointer"
                   />
                 </div>
               </div>
+              <div className="mb-8">
+                <h2 className="mb-2 text-xs font-bold">SERVER NAME</h2>
+                <div className="h-10 rounded-md bg-base-100 pl-2">
+                  <input
+                    ref={inputRef}
+                    value={serverName}
+                    onChange={handleInputChange}
+                    type="text"
+                    className="h-full w-full bg-transparent"
+                  />
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2">
                 <button
                   onClick={onClose}
@@ -102,10 +116,10 @@ const CreateChannelMenu = () => {
                   Cancel
                 </button>
                 <button
-                  disabled={!channelName || channelName.length > 30}
-                  className={`h-9 rounded-md ${!channelName || channelName.length > 30 ? "cursor-not-allowed bg-red-500 text-yellow-500" : "bg-cyan-400 text-lime-400"} px-4`}
+                  disabled={!serverName || serverName.length > 30}
+                  className={`h-9 rounded-md ${!serverName || serverName.length > 30 ? "cursor-not-allowed bg-red-500 text-yellow-500" : "bg-cyan-400 text-lime-400"} px-4`}
                 >
-                  Create Channel
+                  Create Server
                 </button>
               </div>
             </div>
@@ -116,7 +130,7 @@ const CreateChannelMenu = () => {
   );
 };
 
-CreateChannelMenu.propTypes = {
+CreateServerMenu.propTypes = {
   setVisible: PropTypes.func,
 };
-export default CreateChannelMenu;
+export default CreateServerMenu;

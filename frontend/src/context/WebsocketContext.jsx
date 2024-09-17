@@ -13,18 +13,18 @@ export const WebsocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser) {
-      const ws = new WebSocket(`http://127.0.0.1:5000/ws/chat/${7}`);
+      const ws = new WebSocket(
+        `http://127.0.0.1:5000/ws/chat_ws/${authUser.user_id}`,
+      );
 
-      //   ws.onmessage = (event) => {
-      //     try {
-      //       const data = JSON.parse(event.data);
-      //       if (data.users) {
-      //         setOnlineUsers(data.users);
-      //       }
-      //     } catch (error) {
-      //       console.error("Failed to parse websocket message:", error);
-      //     }
-      //   };
+      // ws.onmessage = (event) => {
+      //   try {
+      //     const data = JSON.parse(event.data);
+      //     console.log(data);
+      //   } catch (error) {
+      //     console.error("Failed to parse websocket message:", error);
+      //   }
+      // };
 
       setWebsocket(ws);
 

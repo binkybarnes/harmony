@@ -1,5 +1,5 @@
 import { CSSTransition } from "react-transition-group";
-import { usePopupContext } from "../PopupContext";
+import { usePopupContext } from "./PopupContext";
 import { useRef } from "react";
 
 const ModalOverlay = () => {

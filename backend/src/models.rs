@@ -3,6 +3,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use rocket::serde::{Deserialize, Serialize};
 
+use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
 use chrono::{DateTime, NaiveDate, Utc};
@@ -55,6 +56,8 @@ pub struct Claims {
 
 #[derive(Deserialize)]
 pub struct SendMessageInput {
+    pub channel_id: i32,
+    pub server_id: i32,
     pub message: String,
 }
 
@@ -129,9 +132,15 @@ use tokio::sync::Mutex;
 use ws::{stream::DuplexStream, Message as WsMessage};
 
 // maps channel_id to list of websocket send connections
-pub type ChannelStreamMap =
-    Arc<Mutex<HashMap<i32, Vec<Arc<Mutex<SplitSink<DuplexStream, WsMessage>>>>>>>;
-pub fn new_channel_stream_map() -> ChannelStreamMap {
+pub type SessionIdWebsocketMap =
+    Arc<Mutex<HashMap<Uuid, Arc<Mutex<SplitSink<DuplexStream, WsMessage>>>>>>;
+pub fn new_sessionid_websocket_map() -> SessionIdWebsocketMap {
+    Arc::new(Mutex::new(HashMap::new()))
+}
+
+// map server_id to list of session_ids
+pub type ServerSessionIdMap = Arc<Mutex<HashMap<i32, Arc<Mutex<Vec<Uuid>>>>>>;
+pub fn new_server_sessionid_map() -> ServerSessionIdMap {
     Arc::new(Mutex::new(HashMap::new()))
 }
 
