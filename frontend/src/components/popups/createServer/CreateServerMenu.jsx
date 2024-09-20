@@ -65,7 +65,6 @@ const CreateServerMenu = () => {
     }
   };
 
-  console.log("RERENDER");
   const handleFileChange = useCallback((event) => {
     const file = event.target.files[0];
     if (file) {
@@ -110,15 +109,15 @@ const CreateServerMenu = () => {
               (blob) => {
                 const resizedImage = new File(
                   [blob],
-                  "resized-server-icon.jpg",
+                  "resized-server-icon.webp",
                   {
-                    type: "image/jpeg",
+                    type: "image/webp",
                   },
                 );
                 setServerIcon(resizedImage);
                 setPreviewUrl(URL.createObjectURL(blob));
               },
-              "image/jpeg",
+              "image/webp",
               1, // Quality maximum (1)
             );
           };
@@ -139,6 +138,7 @@ const CreateServerMenu = () => {
       unmountOnExit
       onEntering={() => {
         setButtonsDisabled(true);
+        setServerIcon(null);
         setServerName(`${authUser.display_username}'s server`);
       }}
       onEntered={() => setButtonsDisabled(false)}
@@ -169,7 +169,7 @@ const CreateServerMenu = () => {
                     onChange={handleFileChange}
                     style={{ fontSize: "0px" }}
                     type="file"
-                    accept=".jpg,.jpeg,.png,.gif"
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
                     className="absolute top-0 h-full w-full opacity-0 hover:cursor-pointer"
                   />
                 </div>
