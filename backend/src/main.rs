@@ -1,3 +1,4 @@
+use aws_sdk_s3::Client;
 use middleware::cors;
 use models::{new_server_sessionid_map, new_sessionid_websocket_map};
 use rocket_db_pools::Database;
@@ -24,16 +25,23 @@ async fn index() -> &'static str {
 }
 
 #[launch]
-fn rocket() -> _ {
+async fn rocket() -> _ {
     let _ = dotenv::dotenv().ok();
     let websocket_map = new_sessionid_websocket_map();
     let server_map = new_server_sessionid_map();
+
+    let config = aws_config::load_from_env().await;
+    let aws_client = Client::new(&config);
+    // let response = aws_client.list_buckets().send().await.unwrap();
+    // // Print the list of buckets
+    // println!("Buckets: {:?}", response.buckets);
 
     routes::build()
         .attach(database::HarmonyDb::init())
         .attach(cors::Cors)
         .manage(websocket_map)
         .manage(server_map)
+        .manage(aws_client)
         .register("/", catchers![not_authorized])
         .mount("/", routes![index])
 }

@@ -100,7 +100,7 @@ async fn get_all_servers(
     let servers = sqlx::query_as!(
         Server,
         r#"SELECT 
-        s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins
+        s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
         FROM servers s
         JOIN users_servers us ON us.server_id = s.server_id
         WHERE us.user_id = $1"#,

@@ -10,7 +10,6 @@ const DiscoverServers = () => {
 
   useEffect(() => {
     const initializeServers = async () => {
-      console.log("skibid");
       setServers(await serversPopular());
     };
     initializeServers();

@@ -1,5 +1,7 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::models::{Channel, CreateChannelInput, Server, ServerIds, ServerType, User};
+use crate::models::{
+    Channel, CreateChannelInput, CreateServerInput, S3File, Server, ServerIds, ServerType, User,
+};
 use crate::utils::{
     json_error::json_error,
     user_membership::{ByChannel, ByServer, UserMembershipChecker},
@@ -8,14 +10,19 @@ use crate::{
     database,
     models::{self, ErrorResponse},
 };
+use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::Client;
+use rocket::form::Form;
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket::Error;
+use rocket::State;
 use rocket_db_pools::Connection;
 use validator::{Validate, ValidationErrors};
 
 // get servers with server_type = sever for user for sidebar
+// TODO: make it so that theres an order?
 #[get("/get/<server_type>")]
 pub async fn get_servers(
     guard: JwtGuard,
@@ -36,7 +43,7 @@ pub async fn get_servers(
     let servers = sqlx::query_as!(
         models::Server,
         r#"SELECT 
-        s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins
+        s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
         FROM servers s
         JOIN users_servers us ON us.server_id = s.server_id
         WHERE us.user_id = $1 AND s.server_type = $2"#,
@@ -59,7 +66,7 @@ pub async fn search_servers_name(
     let servers = sqlx::query_as!(
         Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
         FROM servers
         WHERE server_type = 'server' AND server_name % $1
         ORDER BY (SIMILARITY(server_name, 'skibidi') * 0.3 + LOG(members + 1) * 0.7) DESC
@@ -83,7 +90,7 @@ pub async fn search_servers_id(
     let servers = sqlx::query_as!(
         Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
         FROM servers
         WHERE server_type = 'server' AND server_id = $1"#,
         id
@@ -103,7 +110,7 @@ pub async fn get_servers_popular(
     let servers = sqlx::query_as!(
         Server,
         r#"
-        SELECT server_id, server_type AS "server_type!: ServerType", members, server_name, admins
+        SELECT server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
         FROM SERVERS
         WHERE server_type = 'server'
         ORDER BY members DESC
@@ -127,7 +134,7 @@ pub async fn join_server(
     let server = sqlx::query_as!(
         models::Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
         FROM servers WHERE server_id = $1"#,
         server_id
     )
@@ -156,10 +163,74 @@ pub async fn join_server(
 }
 
 // WARNING, does not check for duplicate DM's with the same person
-#[post("/create", format = "json", data = "<server>")]
+// #[post("/create", format = "json", data = "<server>")]
+// pub async fn create_server(
+//     guard: JwtGuard,
+//     server: Json<models::CreateServerInput>,
+//     mut db: Connection<database::HarmonyDb>,
+// ) -> Result<Json<Server>, (Status, Json<ErrorResponse>)> {
+//     server
+//         .validate()
+//         .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
+
+//     let server_type: ServerType = server.server_type;
+//     let recipient_ids: &Vec<i32> = &server.recipient_ids;
+//     let server_name: &String = &server.server_name;
+//     let user_id: &i32 = &guard.0.sub;
+
+//     // validate num recipients given server type
+//     let recipients_len = recipient_ids.len();
+//     match server_type {
+//         ServerType::Server => {
+//             if recipients_len != 0 {
+//                 return Err((
+//                     Status::BadRequest,
+//                     json_error("Server type server should not have recipients on creation"),
+//                 ));
+//             };
+//         }
+//         ServerType::Dm => {
+//             if recipients_len != 1 {
+//                 return Err((
+//                     Status::BadRequest,
+//                     json_error("Server type dm should have 1 recipient"),
+//                 ));
+//             };
+//             if recipient_ids[0] == *user_id {
+//                 return Err((
+//                     Status::BadRequest,
+//                     json_error("Can not create DM with yourself"),
+//                 ));
+//             }
+//         }
+//         ServerType::GroupChat => {
+//             if recipients_len < 2 {
+//                 return Err((
+//                     Status::BadRequest,
+//                     json_error("Server type groupchat should have at least 2 recipients"),
+//                 ));
+//             };
+//         }
+//     };
+
+//     // make server
+//     let server = create_server_helper(server_type, server_name, *user_id, &mut db).await?;
+//     let server_id: i32 = server.server_id;
+//     // make sender join server
+//     join_server_helper(*user_id, server_id, &mut db).await?;
+//     // make recipients join server
+//     for recipient in recipient_ids.iter() {
+//         join_server_helper(*recipient, server_id, &mut db).await?;
+//     }
+
+//     Ok(Json(server))
+// }
+
+#[post("/create", data = "<server>")]
 pub async fn create_server(
     guard: JwtGuard,
-    server: Json<models::CreateServerInput>,
+    server: Form<CreateServerInput>,
+    aws_client: &State<Client>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Server>, (Status, Json<ErrorResponse>)> {
     server
@@ -169,6 +240,7 @@ pub async fn create_server(
     let server_type: ServerType = server.server_type;
     let recipient_ids: &Vec<i32> = &server.recipient_ids;
     let server_name: &String = &server.server_name;
+    let server_icon = &server.server_icon;
     let user_id: &i32 = &guard.0.sub;
 
     // validate num recipients given server type
@@ -206,8 +278,26 @@ pub async fn create_server(
         }
     };
 
+    // put server icon into S3 bucket, if server_icon provided
+    if let Some(server_icon) = &server.server_icon {
+        upload_to_s3(
+            aws_client,
+            &server_icon.key,
+            ByteStream::from(server_icon.data.value.clone()),
+        )
+        .await
+        .map_err(|_| (Status::BadRequest, json_error("Server picture S3 failed")))?;
+    }
+
     // make server
-    let server = create_server_helper(server_type, server_name, *user_id, &mut db).await?;
+    let server = create_server_helper(
+        server_type,
+        server_name,
+        *user_id,
+        server_icon.as_ref().map(|icon| &icon.key),
+        &mut db,
+    )
+    .await?;
     let server_id: i32 = server.server_id;
     // make sender join server
     join_server_helper(*user_id, server_id, &mut db).await?;
@@ -217,6 +307,28 @@ pub async fn create_server(
     }
 
     Ok(Json(server))
+}
+
+// TODO: move to utils?
+async fn upload_to_s3(
+    aws_client: &Client,
+    key: &str,
+    byte_stream: ByteStream,
+) -> Result<(), aws_sdk_s3::Error> {
+    let s3_bucket: String = dotenv::var("S3_IMAGE_BUCKET")
+        .expect("set S3_IMAGE_BUCKET in .env")
+        .parse::<String>()
+        .unwrap();
+
+    aws_client
+        .put_object()
+        .bucket(s3_bucket)
+        .key(key)
+        .body(byte_stream)
+        .send()
+        .await?;
+
+    Ok(())
 }
 
 async fn create_channel_helper(
@@ -249,18 +361,20 @@ async fn create_server_helper(
     server_type: ServerType,
     server_name: &String,
     user_id: i32,
+    server_icon_key: Option<&String>,
     db: &mut Connection<database::HarmonyDb>,
 ) -> Result<Server, (Status, Json<ErrorResponse>)> {
     // make server
     // num members initially 0, members will be incremented in join_server
     let server = sqlx::query_as!(
         models::Server,
-        r#"INSERT INTO public.servers (server_type, members, server_name, admins)
-        VALUES ($1, 0, $2, ARRAY[$3]::integer[]) 
-        RETURNING server_id, server_type AS "server_type!: ServerType", members, server_name, admins"#,
+        r#"INSERT INTO public.servers (server_type, members, server_name, admins, s3_icon_key)
+        VALUES ($1, 0, $2, ARRAY[$3]::integer[], $4) 
+        RETURNING server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key"#,
         server_type as ServerType,
         server_name,
-        user_id
+        user_id,
+        server_icon_key
     )
     .fetch_one(&mut ***db)
     .await

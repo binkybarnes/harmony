@@ -1,10 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import useSearchServers from "../../hooks/useSearchServers";
 
 const SearchServersName = ({ setServers }) => {
   const [searchName, setSearchName] = useState(true);
+  const inputRef = useRef(null);
   const handleClick = () => {
     setSearchName((prev) => !prev);
     setSearchTerm("");
@@ -26,6 +27,19 @@ const SearchServersName = ({ setServers }) => {
       setServers(await searchServers("id", searchTerm));
     }
   };
+
+  useEffect(() => {
+    const focusInput = () => {
+      inputRef.current?.focus();
+    };
+    inputRef.current.focus();
+    document.addEventListener("keydown", focusInput);
+
+    return () => {
+      document.removeEventListener("keydown", focusInput);
+    };
+  }, []);
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex h-10 items-center overflow-hidden rounded-md bg-neutral-700 pr-2">
@@ -35,6 +49,7 @@ const SearchServersName = ({ setServers }) => {
           size={32}
         />
         <input
+          ref={inputRef}
           type="text"
           onChange={handleInputChange}
           value={searchTerm}

@@ -1,14 +1,28 @@
 import PropTypes from "prop-types";
+import useJoinServer from "../../hooks/useJoinServer";
+import useServer from "../../zustand/useServer";
 const ServerCard = ({ server }) => {
+  const { loading, joinServer } = useJoinServer();
+  const setSelectedServer = useServer((state) => state.setSelectedServer);
+  const setSelectedChannel = useServer((state) => state.setSelectedChannel);
+  const handleClick = async () => {
+    await joinServer(server.server_id);
+    setSelectedChannel(null);
+    setSelectedServer(server);
+  };
   return (
-    <div className="server-card flex w-48 flex-col overflow-hidden rounded-md bg-red-500 hover:cursor-pointer">
+    <button
+      disabled={loading}
+      onClick={handleClick}
+      className="server-card flex w-48 flex-col overflow-hidden rounded-md bg-red-500 hover:cursor-pointer"
+    >
       <img
         draggable={false}
         className="h-48 w-full object-cover"
         src="https://cdn.discordapp.com/discovery-splashes/662267976984297473/4798759e115d2500fef16347d578729a.jpg?size=600"
       />
-      <div className="px-2 py-1">
-        <h3 className="truncate font-semibold text-neutral-200">
+      <div className="w-full px-2 py-1">
+        <h3 className="truncate text-left font-semibold text-neutral-200">
           {server.server_name}
         </h3>
         <div className="flex items-center justify-between text-xs text-neutral-200">
@@ -24,7 +38,7 @@ const ServerCard = ({ server }) => {
           </p>
         </div>
       </div>
-    </div>
+    </button>
   );
 };
 

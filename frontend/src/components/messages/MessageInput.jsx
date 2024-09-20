@@ -35,10 +35,10 @@ const MessageInput = () => {
       textareaRef.current.focus();
     };
 
-    window.addEventListener("keydown", focusTextarea);
+    document.addEventListener("keydown", focusTextarea);
 
     return () => {
-      window.removeEventListener("keydown", focusTextarea);
+      document.removeEventListener("keydown", focusTextarea);
     };
   }, []);
 

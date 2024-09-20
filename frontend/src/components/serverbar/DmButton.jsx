@@ -2,11 +2,13 @@ import PropTypes from "prop-types";
 import { usePopupContext } from "../popups/PopupContext";
 import useServer from "../../zustand/useServer";
 import { IoChatbox } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 
-const DmButton = ({ setDiscoverServersVisible }) => {
+const DmButton = () => {
   const { handleServerHover } = usePopupContext();
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
+  const navigate = useNavigate();
   const name = "Direct Messages";
   const handleMouseEnter = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -16,7 +18,7 @@ const DmButton = ({ setDiscoverServersVisible }) => {
     handleServerHover(false, name, {});
   };
   const handleClick = () => {
-    setDiscoverServersVisible(false);
+    navigate("/");
     setSelectedServer(null);
     setSelectedChannel(null);
   };
@@ -31,10 +33,6 @@ const DmButton = ({ setDiscoverServersVisible }) => {
       <IoChatbox size="100%" color="red" />
     </div>
   );
-};
-
-DmButton.propTypes = {
-  setDiscoverServersVisible: PropTypes.func,
 };
 
 export default DmButton;

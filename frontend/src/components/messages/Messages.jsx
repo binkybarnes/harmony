@@ -8,7 +8,25 @@ import { formatTime } from "../../utils/formatTime";
 import useListenMessages from "../../hooks/useListenMessages";
 
 const Messages = () => {
-  const { loading, messages, users } = useGetMessages();
+  const {
+    loading,
+    messages: fetchedMessages,
+    users: fetchedUsers,
+  } = useGetMessages();
+
+  const messages = useServer((state) => state.messages);
+  const users = useServer((state) => state.users);
+  const setMessages = useServer((state) => state.setMessages);
+  const setUsers = useServer((state) => state.setUsers);
+  useEffect(() => {
+    if (fetchedMessages) {
+      setMessages(fetchedMessages);
+    }
+    if (fetchedUsers) {
+      setUsers(fetchedUsers);
+    }
+  }, [fetchedMessages, fetchedUsers, setMessages, setUsers]);
+
   useListenMessages();
 
   const usersMap = useMemo(

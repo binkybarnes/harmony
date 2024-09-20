@@ -35,7 +35,11 @@ const Server = ({ server }) => {
         <img
           draggable={false}
           className="h-[48px] w-[48px]"
-          src={`https://robohash.org/${serverName}`}
+          src={
+            server.s3_icon_key
+              ? `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${server.s3_icon_key}`
+              : `https://robohash.org/${serverName}`
+          }
         />
       </div>
     </div>
@@ -48,6 +52,7 @@ Server.propTypes = {
     server_type: PropTypes.string,
     members: PropTypes.number,
     server_name: PropTypes.string,
+    s3_icon_key: PropTypes.oneOfType([PropTypes.string, PropTypes.any]),
   }),
 };
 

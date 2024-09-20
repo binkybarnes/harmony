@@ -3,11 +3,13 @@ import { usePopupContext } from "../popups/PopupContext";
 import useServer from "../../zustand/useServer";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import { FaCompass } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-const JoinServerButton = ({ setDiscoverServersVisible }) => {
+const JoinServerButton = () => {
   const { handleServerHover } = usePopupContext();
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
+  const navigate = useNavigate();
   const name = "Join a Server";
   const handleMouseEnter = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -17,7 +19,7 @@ const JoinServerButton = ({ setDiscoverServersVisible }) => {
     handleServerHover(false, name, {});
   };
   const handleClick = () => {
-    setDiscoverServersVisible(true);
+    navigate("/discover");
     setSelectedServer(null);
     setSelectedChannel(null);
   };
@@ -32,10 +34,6 @@ const JoinServerButton = ({ setDiscoverServersVisible }) => {
       <FaCompass size="100%" color="red" />
     </div>
   );
-};
-
-JoinServerButton.propTypes = {
-  setDiscoverServersVisible: PropTypes.func,
 };
 
 export default JoinServerButton;

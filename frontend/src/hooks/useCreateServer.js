@@ -4,24 +4,28 @@ import toast from "react-hot-toast";
 const useCreateServer = () => {
   const [loading, setLoading] = useState(false);
 
-  const createServer = async (server_name) => {
+  const createServer = async (server_name, server_icon) => {
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append("server_name", server_name);
+      formData.append("server_type", "Server");
+
+      if (server_icon) {
+        formData.append("server_icon", server_icon);
+      }
+
       const res = await fetch("/api/servers/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipient_ids: [],
-          server_type: "Server",
-          server_name,
-        }),
+        body: formData,
       });
 
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error);
       }
+      return data;
     } catch (error) {
       toast.error(error.message);
     } finally {

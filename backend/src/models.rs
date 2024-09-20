@@ -1,6 +1,11 @@
+use aws_sdk_s3::presigning::PresigningConfig;
+use aws_sdk_s3::primitives::ByteStream;
 // use rocket::serde::{json::Json, Deserialize, Serialize};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use rocket::data::{Capped, ToByteUnit};
+use rocket::form::{self, DataField, Form, FromFormField};
+use rocket::fs::TempFile;
 use rocket::serde::{Deserialize, Serialize};
 
 use uuid::Uuid;
@@ -80,7 +85,7 @@ pub struct Message {
 //     pub server_type: &'r str,
 // }
 
-#[derive(sqlx::Type, Deserialize, Serialize, Clone, Copy)]
+#[derive(sqlx::Type, Deserialize, Serialize, FromFormField, Clone, Copy)]
 #[sqlx(type_name = "server_type", rename_all = "lowercase")]
 pub enum ServerType {
     Dm,
@@ -88,6 +93,7 @@ pub enum ServerType {
     Server,
 }
 
+// for sqlx queries
 #[derive(Serialize)]
 pub struct Server {
     pub server_id: i32,
@@ -95,6 +101,7 @@ pub struct Server {
     pub members: i32,
     pub server_name: String,
     pub admins: Vec<i32>,
+    pub s3_icon_key: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -104,12 +111,39 @@ pub struct Channel {
     pub channel_name: String,
 }
 
-#[derive(Deserialize, Validate)]
+// #[derive(Deserialize, Validate)]
+// pub struct CreateServerInput {
+//     pub recipient_ids: Vec<i32>,
+//     pub server_type: ServerType,
+//     #[validate(length(min = 1, max = 30))]
+//     pub server_name: String,
+// }
+
+pub struct S3File {
+    pub key: String,
+    pub data: Capped<Vec<u8>>,
+}
+
+#[rocket::async_trait]
+impl<'r> FromFormField<'r> for S3File {
+    async fn from_data(field: DataField<'r, '_>) -> form::Result<'r, Self> {
+        let file_name = format!("server-profile-pictures/{}", Uuid::new_v4());
+        let bytes = field.data.open(256.kibibytes()).into_bytes().await?;
+
+        Ok(S3File {
+            key: file_name,
+            data: bytes,
+        })
+    }
+}
+
+#[derive(FromForm, Validate)]
 pub struct CreateServerInput {
     pub recipient_ids: Vec<i32>,
     pub server_type: ServerType,
     #[validate(length(min = 1, max = 30))]
     pub server_name: String,
+    pub server_icon: Option<S3File>,
 }
 
 #[derive(Deserialize)]

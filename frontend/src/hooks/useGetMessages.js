@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import useServer from "../zustand/useServer";
 import toast from "react-hot-toast";
 
@@ -7,13 +7,15 @@ const useGetMessages = () => {
   const selectedServer = useServer((state) => state.selectedServer);
   const selectedChannel = useServer((state) => state.selectedChannel);
 
-  const messages = useServer((state) => state.messages);
-  const setMessages = useServer((state) => state.setMessages);
+  // const messages = useServer((state) => state.messages);
+  // const setMessages = useServer((state) => state.setMessages);
+  const [messages, setMessages] = useState([]);
+  const [users, setUsers] = useState([]);
 
-  const users = useServer((state) => state.users);
-  const setUsers = useServer((state) => state.setUsers);
+  // const users = useServer((state) => state.users);
+  // const setUsers = useServer((state) => state.setUsers);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch(
         `/api/messages/get/${selectedChannel.channel_id}`,
@@ -25,9 +27,9 @@ const useGetMessages = () => {
       toast.error(error.message);
       return null;
     }
-  };
+  }, [selectedChannel.channel_id]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await fetch(`/api/servers/users/${selectedServer.server_id}`);
       const data = await res.json();
@@ -37,10 +39,10 @@ const useGetMessages = () => {
       toast.error(error.message);
       return null;
     }
-  };
+  }, [selectedServer.server_id]);
 
   useEffect(() => {
-    if (!selectedServer?.server_id || !selectedChannel?.channel_id) return;
+    if (!selectedChannel?.channel_id || !selectedServer?.server_id) return;
     const getMessages = async () => {
       setLoading(true);
       const [usersData, messagesData] = await Promise.all([
@@ -59,7 +61,12 @@ const useGetMessages = () => {
     };
 
     getMessages();
-  }, [selectedServer?.server_id, selectedChannel?.channel_id]);
+  }, [
+    selectedServer?.server_id,
+    selectedChannel?.channel_id,
+    fetchMessages,
+    fetchUsers,
+  ]);
   return { loading, messages, users };
 };
 

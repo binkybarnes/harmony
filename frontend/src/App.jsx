@@ -11,7 +11,7 @@ function App() {
     <div>
       <Routes>
         <Route
-          path="/"
+          path="*"
           element={authUser ? <Home /> : <Navigate to="/login" />}
         />
         <Route

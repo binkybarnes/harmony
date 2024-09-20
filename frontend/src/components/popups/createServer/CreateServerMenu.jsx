@@ -11,7 +11,8 @@ import UploadImageIcon from "./UploadImageIcon";
 
 const CreateServerMenu = () => {
   const menuRef = useRef(null);
-  const selectedServer = useServer((state) => state.selectedServer);
+  const setSelectedServer = useServer((state) => state.setSelectedServer);
+  const addServer = useServer((state) => state.addServer);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
   const { loading, createServer } = useCreateServer();
   const { serverMenu, setServerMenuVisible, setModalOverlayVisible } =
@@ -21,6 +22,8 @@ const CreateServerMenu = () => {
   const inputRef = useRef(null);
 
   const [serverName, setServerName] = useState("");
+  const [serverIcon, setServerIcon] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   const handleInputChange = useCallback((event) => {
     setServerName(event.target.value);
@@ -32,8 +35,7 @@ const CreateServerMenu = () => {
   }, [setServerMenuVisible, setModalOverlayVisible]);
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      event.stopPropagation();
+    const handleKeyDown = () => {
       inputRef.current?.focus();
     };
     const handleClickOutside = (event) => {
@@ -54,10 +56,79 @@ const CreateServerMenu = () => {
     if (serverName.length > 30) {
       toast.error("Server name too long");
     } else {
-      await createServer(serverName);
+      const newServer = await createServer(serverName, serverIcon);
+      if (newServer) {
+        addServer(newServer);
+        setSelectedServer(newServer);
+      }
       onClose();
     }
   };
+
+  console.log("RERENDER");
+  const handleFileChange = useCallback((event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result;
+        if (typeof result === "string") {
+          const img = new Image();
+          img.src = result;
+
+          img.onload = () => {
+            const inputWidth = img.naturalWidth;
+            const inputHeight = img.naturalHeight;
+            // convert to aspect ratio 1
+            let outputWidth = inputWidth;
+            let outputHeight = inputHeight;
+            if (inputWidth > inputHeight) {
+              outputWidth = inputHeight;
+            } else if (inputHeight > inputWidth) {
+              outputHeight = inputWidth;
+            }
+
+            const offsetX = (outputWidth - inputWidth) * 0.5;
+            const offsetY = (outputHeight - inputHeight) * 0.5;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = outputWidth;
+            canvas.height = outputHeight;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, offsetX, offsetY);
+
+            // create a second canvas to scale the square image to 512x512
+            const scaledCanvas = document.createElement("canvas");
+            scaledCanvas.width = 512;
+            scaledCanvas.height = 512;
+
+            const scaledCtx = scaledCanvas.getContext("2d");
+            scaledCtx.drawImage(canvas, 0, 0, 512, 512);
+
+            scaledCanvas.toBlob(
+              (blob) => {
+                const resizedImage = new File(
+                  [blob],
+                  "resized-server-icon.jpg",
+                  {
+                    type: "image/jpeg",
+                  },
+                );
+                setServerIcon(resizedImage);
+                setPreviewUrl(URL.createObjectURL(blob));
+              },
+              "image/jpeg",
+              1, // Quality maximum (1)
+            );
+          };
+        } else {
+          console.error("Result of FileReader is not a string");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
 
   return (
     <CSSTransition
@@ -85,8 +156,17 @@ const CreateServerMenu = () => {
               </div>
               <div className="mb-4 flex justify-center">
                 <div className="relative h-[80px] w-[80px]">
-                  <UploadImageIcon />
+                  {serverIcon ? (
+                    <img
+                      src={previewUrl}
+                      className="h-[80px] w-[80px] rounded-md"
+                    />
+                  ) : (
+                    <UploadImageIcon />
+                  )}
+
                   <input
+                    onChange={handleFileChange}
                     style={{ fontSize: "0px" }}
                     type="file"
                     accept=".jpg,.jpeg,.png,.gif"

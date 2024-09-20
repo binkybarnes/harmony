@@ -5,8 +5,7 @@ import toast from "../../node_modules/react-hot-toast/dist/index";
 
 const useListenMessages = () => {
   const { websocket } = useWebsocketContext();
-  const messages = useServer((state) => state.messages);
-  const setMessages = useServer((state) => state.setMessages);
+  const addMessage = useServer((state) => state.addMessage);
   const selectedChannel = useServer((state) => state.selectedChannel);
   useEffect(() => {
     if (!websocket) return;
@@ -14,7 +13,7 @@ const useListenMessages = () => {
       try {
         const data = JSON.parse(event.data);
         if (data && data.channel_id == selectedChannel.channel_id) {
-          setMessages([...messages, data]);
+          addMessage(data);
         }
       } catch (error) {
         toast.error(error.message);
@@ -25,7 +24,7 @@ const useListenMessages = () => {
     return () => {
       websocket.removeEventListener("message", handleIncomingMessage);
     };
-  }, [websocket, messages, setMessages]);
+  }, [websocket, addMessage, selectedChannel.channel_id]);
 };
 
 export default useListenMessages;

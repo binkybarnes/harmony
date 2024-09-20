@@ -11,7 +11,7 @@ const Serverbar = ({ setDiscoverServersVisible }) => {
       <div className="h-[2px] w-[36px] rounded-[1px] bg-emerald-400"></div>
       <Servers />
       <CreateServerButton />
-      <JoinServerButton setDiscoverServersVisible={setDiscoverServersVisible} />
+      <JoinServerButton />
     </div>
   );
 };

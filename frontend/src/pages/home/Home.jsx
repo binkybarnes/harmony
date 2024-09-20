@@ -11,23 +11,39 @@ import ModalOverlay from "../../components/popups/ModalOverlay";
 import { useState } from "react";
 import useServer from "../../zustand/useServer";
 import CreateServerMenu from "../../components/popups/createServer/CreateServerMenu";
+import { Navigate, Route, Routes, Router } from "react-router-dom";
 
 const Home = () => {
-  const [discoverServersVisible, setDiscoverServersVisible] = useState(false);
   const selectedServer = useServer((state) => state.selectedServer);
   return (
     <div className="flex overflow-hidden">
       <PopupProvider>
-        <Serverbar setDiscoverServersVisible={setDiscoverServersVisible} />
+        <Serverbar />
 
-        {!selectedServer && discoverServersVisible ? (
-          <DiscoverServers />
-        ) : (
-          <>
-            <Sidebar />
-            <MessageContainer />
-          </>
-        )}
+        <Routes>
+          <Route
+            path="/discover"
+            element={selectedServer ? <Navigate to="/" /> : <DiscoverServers />}
+          />
+          <Route
+            path="/"
+            element={
+              <>
+                <Sidebar />
+                <MessageContainer />
+              </>
+            }
+          />
+
+          {/* {!selectedServer && discoverServersVisible ? (
+            <DiscoverServers />
+          ) : (
+            <>
+              <Sidebar />
+              <MessageContainer />
+            </>
+          )} */}
+        </Routes>
 
         <div className="select-none">
           <InfoTooltip />
