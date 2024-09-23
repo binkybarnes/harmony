@@ -1,5 +1,7 @@
 import PropTypes from "prop-types";
+import { formatTime } from "../../utils/formatTime";
 const Message = ({ message }) => {
+  const formatted_date = formatTime(message.timestamp);
   return (
     <div className="relative mt-4 rounded-md pl-16">
       <div className="absolute left-4 w-10 select-none overflow-hidden rounded-md">
@@ -13,7 +15,7 @@ const Message = ({ message }) => {
           10/10/2000 3:50 PM
         </span> */}
         <span className="align-middle text-xs leading-[1.25rem]">
-          {message.formatted_date}
+          {formatted_date}
         </span>
       </h3>
       <div className="whitespace-break-spaces leading-[1.25rem] text-neutral-200">
@@ -28,7 +30,7 @@ Message.propTypes = {
     profile_picture: PropTypes.string,
     display_username: PropTypes.string,
     message: PropTypes.string,
-    formatted_date: PropTypes.string,
+    timestamp: PropTypes.string,
   }),
 };
 export default Message;

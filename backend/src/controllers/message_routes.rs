@@ -1,5 +1,6 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::models::{ServerSessionIdMap, SessionIdWebsocketMap};
+use crate::models::{ServerSessionIdMap, SessionIdWebsocketMap, WebSocketEvent};
+use crate::utils::broadcast_ws_message::broadcast_ws_message;
 use crate::{
     database,
     models::{self, ErrorResponse},
@@ -29,70 +30,45 @@ pub async fn send_message(
     let server_id = message_json.server_id;
     let message = &message_json.message;
 
+    let display_username = &message_json.display_username;
+    let profile_picture = &message_json.profile_picture;
+
     // check if user is in the server that has the channel the message is being sent to
     let channel_checker = ByChannel { channel_id };
     channel_checker.user_in_server(&mut db, *user_id).await?;
 
     let message = sqlx::query_as!(
         models::Message,
-        "INSERT INTO messages (user_id, channel_id, message)
-        VALUES ($1, $2, $3)
+        "INSERT INTO messages (user_id, channel_id, message, display_username, profile_picture)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *",
         user_id,
         channel_id,
-        message
+        message,
+        display_username,
+        profile_picture
     )
     .fetch_one(&mut **db)
     .await
     .map_err(|_| (Status::BadRequest, json_error("database error")))?;
 
+    let event = WebSocketEvent::Message(message.clone());
     // turn to json string
-    let message_json = serde_json::to_string(&message).map_err(|_| {
+    let message_json = serde_json::to_string(&event).map_err(|_| {
         (
             Status::InternalServerError,
             json_error("serialization error"),
         )
     })?;
 
-    let websocket_map_state = websocket_map_state.inner().clone();
-    let server_map_state = server_map_state.inner().clone();
-    {
-        let websocket_map = websocket_map_state.lock().await;
-        let server_map = server_map_state.lock().await;
-
-        if let Some(arc_mutex_vec) = server_map.get(&server_id) {
-            let senders_session_id = arc_mutex_vec.lock().await;
-            for sender_session_id in senders_session_id.iter() {
-                if let Some(sender_arc_mutex) = websocket_map.get(sender_session_id) {
-                    let mut sender = sender_arc_mutex.lock().await;
-                    if let Err(e) = sender.send(message_json.clone().into()).await {
-                        eprintln!("Error sending message: {:?}", e);
-                    }
-                } else {
-                    println!(
-                        "No WebSocket sender found for session ID: {:?}",
-                        sender_session_id
-                    );
-                }
-            }
-        } else {
-            println!("No session IDs found for server ID: {:?}", server_id);
-        }
-    }
-
-    // // Broadcast the message to all connected clients in the channel
-    // let state = state.inner().clone();
-    // {
-    //     let mut channels = state.lock().await;
-    //     if let Some(senders) = channels.get_mut(&channel_id) {
-    //         for sender in senders.iter() {
-    //             let mut sender = sender.lock().await;
-    //             if let Err(e) = sender.send(message_json.clone().into()).await {
-    //                 eprintln!("Failed to send message to a client: {:?}", e);
-    //             }
-    //         }
-    //     }
-    // }
+    // broadcast message to everyone in the server
+    broadcast_ws_message(
+        &message_json,
+        server_id,
+        websocket_map_state,
+        server_map_state,
+    )
+    .await;
 
     // Ok::<_, (Status, Json<ErrorResponse>)>(status::Created::new("/send").body(Json(message)))
     Ok::<_, (Status, Json<ErrorResponse>)>((Status::Created, Json(message)))

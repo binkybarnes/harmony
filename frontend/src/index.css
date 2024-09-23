@@ -90,24 +90,24 @@ input:focus {
 
 /* --------------------------------------------- */
 
-/* create channel menu css transition --------------------------------------------- */
+/* modal menu css transition --------------------------------------------- */
 
-.channel-menu-enter {
+.modal-menu-enter {
   opacity: 0;
   transform: scale(0.5);
 }
-.channel-menu-enter-active {
+.modal-menu-enter-active {
   opacity: 1;
   transform: scale(1);
   transition:
     opacity 75ms,
     transform 75ms;
 }
-.channel-menu-exit {
+.modal-menu-exit {
   opacity: 1;
   transform: scale(1);
 }
-.channel-menu-exit-active {
+.modal-menu-exit-active {
   opacity: 0;
   transform: scale(0.5);
   transition:

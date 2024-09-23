@@ -64,6 +64,8 @@ pub struct SendMessageInput {
     pub channel_id: i32,
     pub server_id: i32,
     pub message: String,
+    pub display_username: String,
+    pub profile_picture: String,
 }
 
 #[derive(Deserialize)]
@@ -71,13 +73,15 @@ pub struct GetMessagesInput {
     pub channel_id: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Message {
     pub message_id: i64,
     pub user_id: i32,
     pub channel_id: i32,
     pub message: String,
     pub timestamp: DateTime<Utc>,
+    pub display_username: String,
+    pub profile_picture: String,
 }
 
 // #[derive(Deserialize)]
@@ -146,6 +150,13 @@ pub struct CreateServerInput {
     pub server_icon: Option<S3File>,
 }
 
+#[derive(FromForm, Validate)]
+pub struct EditServerInput {
+    #[validate(length(min = 1, max = 30))]
+    pub server_name: Option<String>,
+    pub server_icon: Option<S3File>,
+}
+
 #[derive(Deserialize)]
 pub struct ServerIds {
     pub server_ids: Vec<i32>,
@@ -176,6 +187,20 @@ pub fn new_sessionid_websocket_map() -> SessionIdWebsocketMap {
 pub type ServerSessionIdMap = Arc<Mutex<HashMap<i32, Arc<Mutex<Vec<Uuid>>>>>>;
 pub fn new_server_sessionid_map() -> ServerSessionIdMap {
     Arc::new(Mutex::new(HashMap::new()))
+}
+
+// websocket events
+#[derive(Serialize)]
+#[serde(tag = "event_type", content = "data")]
+pub enum WebSocketEvent {
+    Message(Message),
+    UserJoin(UserJoin),
+}
+
+#[derive(Serialize)]
+pub struct UserJoin {
+    pub user: User,
+    pub server_id: i32,
 }
 
 // #[derive(Deserialize)]

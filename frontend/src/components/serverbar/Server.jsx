@@ -24,11 +24,6 @@ const Server = ({ server }) => {
     setSelectedChannel(null);
   };
 
-  console.log(server);
-  console.log(
-    `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${server.s3_icon_key}`,
-  );
-
   return (
     <div
       onMouseEnter={handleMouseEnter}

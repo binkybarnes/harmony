@@ -29,7 +29,10 @@ const CreateChannelMenu = () => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      event.stopPropagation();
+      if (event.key === "Escape") {
+        onClose();
+      }
+      // apparently focusing on another inputref prevents the messageinput from listening
       inputRef.current?.focus();
     };
     const handleClickOutside = (event) => {
@@ -39,18 +42,31 @@ const CreateChannelMenu = () => {
     };
     document.addEventListener("click", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
+
+    if (!channelMenu.visible) {
+      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    }
     return () => {
       document.removeEventListener("click", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, [onClose, channelMenu.visible]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(channelName.length);
     if (channelName.length > 30) {
       toast.error("Channel name too long");
     } else {
+      await createChannel(selectedServer.server_id, channelName);
+      // TODO: ADD CHANNEL TO LIST
+      onClose();
+    }
+  };
+
+  const handleInputKeyDown = async (event) => {
+    // idk why enter doesnt submit the form
+    if (event.key === "Enter") {
       await createChannel(selectedServer.server_id, channelName);
       onClose();
     }
@@ -61,7 +77,7 @@ const CreateChannelMenu = () => {
       in={channelMenu.visible}
       nodeRef={menuRef}
       timeout={200}
-      classNames="channel-menu"
+      classNames="modal-menu"
       unmountOnExit
       onEntering={() => {
         setButtonsDisabled(true);
@@ -88,6 +104,7 @@ const CreateChannelMenu = () => {
                     ref={inputRef}
                     value={channelName}
                     onChange={handleInputChange}
+                    onKeyDown={handleInputKeyDown}
                     type="text"
                     placeholder="new-channel"
                     className="h-full flex-1 bg-transparent"

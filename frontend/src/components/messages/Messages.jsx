@@ -5,7 +5,7 @@ import useServer from "../../zustand/useServer";
 import { useEffect, useMemo, useRef } from "react";
 import useGetUsers from "../../hooks/useGetUsers";
 import { formatTime } from "../../utils/formatTime";
-import useListenMessages from "../../hooks/useListenMessages";
+import useListenMessages from "../../hooks/websocketListeners/useListenMessages";
 
 const Messages = () => {
   const {
@@ -29,38 +29,38 @@ const Messages = () => {
 
   useListenMessages();
 
-  const usersMap = useMemo(
-    () =>
-      users.reduce((acc, user) => {
-        acc[user.user_id] = user;
-        return acc;
-      }, {}),
-    [users],
-  );
+  // const usersMap = useMemo(
+  //   () =>
+  //     users.reduce((acc, user) => {
+  //       acc[user.user_id] = user;
+  //       return acc;
+  //     }, {}),
+  //   [users],
+  // );
 
-  const messagesWithUsers = useMemo(() => {
-    return messages.map((message) => {
-      const formatted_date = formatTime(message.timestamp);
+  // const messagesWithUsers = useMemo(() => {
+  //   return messages.map((message) => {
+  //     const formatted_date = formatTime(message.timestamp);
 
-      const { display_username, profile_picture } = usersMap[message.user_id];
-      return {
-        ...message,
-        display_username,
-        profile_picture,
-        formatted_date,
-      };
-    });
-  }, [usersMap, messages]);
+  //     const { display_username, profile_picture } = usersMap[message.user_id];
+  //     return {
+  //       ...message,
+  //       display_username,
+  //       profile_picture,
+  //       formatted_date,
+  //     };
+  //   });
+  // }, [usersMap, messages]);
 
   // dont render messages if loading, cause it would be the previous channel's messages
   // maybe add message cacheing
 
   const mapMessages = useMemo(
     () =>
-      messagesWithUsers.map((message) => {
+      messages.map((message) => {
         return <Message message={message} key={message.message_id} />;
       }),
-    [messagesWithUsers],
+    [messages],
   );
 
   // scroll to bottom of messages

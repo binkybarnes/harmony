@@ -2,16 +2,24 @@ import { IoSend } from "react-icons/io5";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import useSendMessage from "../../hooks/useSendMessage.js";
+import { useAuthContext } from "../../context/AuthContext.jsx";
+import { usePopupContext } from "../popups/PopupContext.jsx";
 const MessageInput = () => {
   const { loading, sendMessage } = useSendMessage();
   const [message, setMessage] = useState("");
   const textareaRef = useRef(null);
   const formRef = useRef(null);
+  const { authUser } = useAuthContext();
+  const { popupActive } = usePopupContext();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (message) {
-      await sendMessage(message);
+      await sendMessage(
+        message,
+        authUser.display_username,
+        authUser.profile_picture,
+      );
       setMessage("");
     }
   };
@@ -35,12 +43,16 @@ const MessageInput = () => {
       textareaRef.current.focus();
     };
 
-    document.addEventListener("keydown", focusTextarea);
+    if (popupActive) {
+      document.removeEventListener("keydown", focusTextarea);
+    } else {
+      document.addEventListener("keydown", focusTextarea);
+    }
 
     return () => {
       document.removeEventListener("keydown", focusTextarea);
     };
-  }, []);
+  }, [popupActive]);
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>

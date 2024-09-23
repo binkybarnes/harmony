@@ -1,46 +1,49 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TbBrandAmongUs } from "react-icons/tb";
 import { CSSTransition } from "react-transition-group";
 import { IoIosClose } from "react-icons/io";
 import PropTypes from "prop-types";
 import { usePopupContext } from "../PopupContext";
+import useCreateChannel from "../../../hooks/useCreateChannel";
 import useServer from "../../../zustand/useServer";
+
 import toast from "react-hot-toast";
-import { useAuthContext } from "../../../context/AuthContext";
-import useCreateServer from "../../../hooks/useCreateServer";
-import UploadImageIcon from "./UploadImageIcon";
-
-const CreateServerMenu = () => {
+import useEditServer from "../../../hooks/useEditServer";
+const ServerSettingsMenu = () => {
   const menuRef = useRef(null);
-  const setSelectedServer = useServer((state) => state.setSelectedServer);
-  const addServer = useServer((state) => state.addServer);
-  const [buttonsDisabled, setButtonsDisabled] = useState(false);
-  const { createServer } = useCreateServer();
-  const { serverMenu, setServerMenuVisible, setModalOverlayVisible } =
-    usePopupContext();
-
-  const { authUser } = useAuthContext();
   const inputRef = useRef(null);
+  const selectedServer = useServer((state) => state.selectedServer);
+  const [buttonsDisabled, setButtonsDisabled] = useState(false);
+  const {
+    serverSettingsMenu,
+    setServerSettingsMenuVisible,
+    setModalOverlayVisible,
+  } = usePopupContext();
 
   const [serverName, setServerName] = useState("");
   const [serverIcon, setServerIcon] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  const [infoChanged, setInfoChanged] = useState(false);
+
+  const { loading, editServer } = useEditServer();
+
+  const onClose = useCallback(() => {
+    setServerSettingsMenuVisible(false);
+    setModalOverlayVisible(false);
+  }, [setServerSettingsMenuVisible, setModalOverlayVisible]);
+
   const handleInputChange = useCallback((event) => {
     setServerName(event.target.value);
   }, []);
 
-  const onClose = useCallback(() => {
-    setServerMenuVisible(false);
-    setModalOverlayVisible(false);
-  }, [setServerMenuVisible, setModalOverlayVisible]);
-
   useEffect(() => {
+    setInfoChanged(serverName !== selectedServer?.server_name);
+
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         onClose();
       }
-      // apparently focusing on another inputref prevents the messageinput from listening
-      inputRef.current?.focus();
     };
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -50,7 +53,7 @@ const CreateServerMenu = () => {
     document.addEventListener("click", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
 
-    if (!serverMenu.visible) {
+    if (!serverSettingsMenu.visible) {
       document.removeEventListener("click", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     }
@@ -58,21 +61,12 @@ const CreateServerMenu = () => {
       document.removeEventListener("click", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, serverMenu.visible]);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (serverName.length > 30) {
-      toast.error("Server name too long");
-    } else {
-      const newServer = await createServer(serverName, serverIcon);
-      if (newServer) {
-        addServer(newServer);
-        setSelectedServer(newServer);
-      }
-      onClose();
-    }
-  };
+  }, [
+    onClose,
+    serverSettingsMenu.visible,
+    serverName,
+    selectedServer?.server_name,
+  ]);
 
   const handleFileChange = useCallback((event) => {
     const file = event.target.files[0];
@@ -135,20 +129,38 @@ const CreateServerMenu = () => {
         }
       };
       reader.readAsDataURL(file);
+      setInfoChanged(true);
     }
   }, []);
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (serverName.length > 30) {
+      toast.error("Server name too long");
+    } else {
+      const newServer = await editServer(
+        selectedServer.server_id,
+        serverName,
+        serverIcon,
+      );
+      if (newServer) {
+        // TODO: update the changes
+      }
+      onClose();
+    }
+  };
+
   return (
     <CSSTransition
-      in={serverMenu.visible}
+      in={serverSettingsMenu.visible}
       nodeRef={menuRef}
       timeout={200}
       classNames="modal-menu"
       unmountOnExit
       onEntering={() => {
         setButtonsDisabled(true);
+        setServerName(selectedServer.server_name);
         setServerIcon(null);
-        setServerName(`${authUser.display_username}'s server`);
       }}
       onEntered={() => setButtonsDisabled(false)}
       onExiting={() => setButtonsDisabled(true)}
@@ -156,24 +168,29 @@ const CreateServerMenu = () => {
       <div className="absolute left-0 top-0 flex h-screen w-screen items-center justify-center">
         <form onSubmit={handleSubmit} ref={menuRef}>
           <fieldset disabled={buttonsDisabled}>
-            <div className="w-[460px] rounded-md bg-green-200 p-4">
+            <div className="rounded-md bg-green-200 p-4">
               <div className="mb-4 flex items-center justify-between">
-                <h1 className="text-xl font-medium">Create Server</h1>
+                <h1 className="mb-2.5 text-xl font-semibold text-red-500">
+                  Server Settings
+                </h1>
                 <button onClick={onClose} className="hover:text-green-500">
                   <IoIosClose className="flex-shrink-0" size={40} />
                 </button>
               </div>
-              <div className="mb-4 flex justify-center">
-                <div className="relative h-[80px] w-[80px]">
-                  {serverIcon ? (
-                    <img
-                      src={previewUrl}
-                      className="h-[80px] w-[80px] rounded-md"
-                    />
-                  ) : (
-                    <UploadImageIcon />
-                  )}
 
+              <div className="mb-4 flex gap-5">
+                <div className="group relative h-[144px] w-[144px] overflow-hidden rounded-md">
+                  <img
+                    draggable={false}
+                    className="h-[144px] w-[144px]"
+                    src={
+                      serverIcon
+                        ? previewUrl
+                        : selectedServer && selectedServer.s3_icon_key
+                          ? `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${selectedServer.s3_icon_key}`
+                          : `https://robohash.org/${serverName}`
+                    }
+                  />
                   <input
                     onChange={handleFileChange}
                     style={{ fontSize: "0px" }}
@@ -181,18 +198,34 @@ const CreateServerMenu = () => {
                     accept=".jpg,.jpeg,.png,.gif,.webp"
                     className="absolute left-0 top-0 h-full w-full opacity-0 hover:cursor-pointer"
                   />
+                  <div className="pointer-events-none invisible absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-xs font-bold text-white group-hover:visible">
+                    CHANGE ICON
+                  </div>
                 </div>
-              </div>
-              <div className="mb-8">
-                <h2 className="mb-2 text-xs font-bold">SERVER NAME</h2>
-                <div className="h-10 rounded-md bg-base-100 pl-2">
-                  <input
-                    ref={inputRef}
-                    value={serverName}
-                    onChange={handleInputChange}
-                    type="text"
-                    className="h-full w-full bg-transparent"
-                  />
+                <div>
+                  <h3 className="mb-2 flex-1 text-xs font-bold">SERVER ICON</h3>
+                  <button className="relative rounded-md border-[1px] border-solid border-base-100 bg-transparent px-2.5 py-2">
+                    Upload Image
+                    <input
+                      onChange={handleFileChange}
+                      style={{ fontSize: "0px" }}
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.gif,.webp"
+                      className="absolute left-0 top-0 h-full w-full opacity-0 hover:cursor-pointer"
+                    />
+                  </button>
+                </div>
+
+                <div>
+                  <h3 className="mb-2 flex-1 text-xs font-bold">SERVER NAME</h3>
+                  <div className="rounded-md bg-base-100">
+                    <input
+                      value={serverName}
+                      type="text"
+                      onChange={handleInputChange}
+                      className="bg-transparent px-2.5 py-2"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -204,10 +237,12 @@ const CreateServerMenu = () => {
                   Cancel
                 </button>
                 <button
-                  disabled={!serverName || serverName.length > 30}
-                  className={`h-9 rounded-md ${!serverName || serverName.length > 30 ? "cursor-not-allowed bg-red-500 text-yellow-500" : "bg-cyan-400 text-lime-400"} px-4`}
+                  disabled={
+                    !infoChanged || !serverName || serverName.length > 30
+                  }
+                  className={`h-9 rounded-md ${!infoChanged || !serverName || serverName.length > 30 ? "cursor-not-allowed bg-red-500 text-yellow-500" : "bg-cyan-400 text-lime-400"} px-4`}
                 >
-                  Create Server
+                  Save Changes
                 </button>
               </div>
             </div>
@@ -218,7 +253,7 @@ const CreateServerMenu = () => {
   );
 };
 
-CreateServerMenu.propTypes = {
+ServerSettingsMenu.propTypes = {
   setVisible: PropTypes.func,
 };
-export default CreateServerMenu;
+export default ServerSettingsMenu;

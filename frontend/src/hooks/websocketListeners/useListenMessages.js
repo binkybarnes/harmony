@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { useWebsocketContext } from "../context/WebsocketContext";
-import useServer from "../zustand/useServer";
-import toast from "../../node_modules/react-hot-toast/dist/index";
+import { useWebsocketContext } from "../../context/WebsocketContext";
+import useServer from "../../zustand/useServer";
+import toast from "react-hot-toast";
 
 const useListenMessages = () => {
   const { websocket } = useWebsocketContext();
@@ -11,9 +11,13 @@ const useListenMessages = () => {
     if (!websocket) return;
     const handleIncomingMessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        if (data && data.channel_id == selectedChannel.channel_id) {
-          addMessage(data);
+        const ws_event = JSON.parse(event.data);
+
+        if (
+          ws_event.event_type === "Message" &&
+          ws_event.data.channel_id == selectedChannel.channel_id
+        ) {
+          addMessage(ws_event.data);
         }
       } catch (error) {
         toast.error(error.message);

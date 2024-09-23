@@ -7,7 +7,7 @@ const useSendMessage = () => {
   const selectedChannel = useServer((state) => state.selectedChannel);
   const selectedServer = useServer((state) => state.selectedServer);
 
-  const sendMessage = async (message) => {
+  const sendMessage = async (message, display_username, profile_picture) => {
     setLoading(true);
     try {
       const res = await fetch(`/api/messages/send`, {
@@ -19,6 +19,8 @@ const useSendMessage = () => {
           channel_id: selectedChannel.channel_id,
           server_id: selectedServer.server_id,
           message,
+          display_username,
+          profile_picture,
         }),
       });
       const data = await res.json();

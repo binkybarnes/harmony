@@ -39,6 +39,7 @@ const PopupProvider = ({ children }) => {
   });
 
   const toggleServerDropdown = () => {
+    setPopupActive(!serverDropdown.visible);
     setServerDropdown((prev) => ({
       ...prev,
       visible: !prev.visible,
@@ -51,18 +52,32 @@ const PopupProvider = ({ children }) => {
   });
 
   const setChannelMenuVisible = (visible) => {
+    setPopupActive(visible);
     setChannelMenu(() => ({
       visible,
     }));
   };
 
-  // Create Channel Menu --------------------------------------------------------
+  // Create Server Menu --------------------------------------------------------
   const [serverMenu, setServerMenu] = useState({
     visible: false,
   });
 
   const setServerMenuVisible = (visible) => {
+    setPopupActive(visible);
     setServerMenu(() => ({
+      visible,
+    }));
+  };
+
+  // Server Settings Menu  --------------------------------------------------------
+  const [serverSettingsMenu, setServerSettingsMenu] = useState({
+    visible: false,
+  });
+
+  const setServerSettingsMenuVisible = (visible) => {
+    setPopupActive(visible);
+    setServerSettingsMenu(() => ({
       visible,
     }));
   };
@@ -78,9 +93,15 @@ const PopupProvider = ({ children }) => {
     }));
   };
 
+  // Popup Active  --------------------------------------------------------
+  // prevent messageinput from focusing on keydown when popup is active
+  const [popupActive, setPopupActive] = useState(false);
+
   return (
     <PopupContext.Provider
       value={{
+        popupActive,
+        setPopupActive,
         serverTooltip,
         handleServerHover,
         serverDropdown,
@@ -93,6 +114,8 @@ const PopupProvider = ({ children }) => {
         setModalOverlayVisible,
         serverMenu,
         setServerMenuVisible,
+        serverSettingsMenu,
+        setServerSettingsMenuVisible,
       }}
     >
       {children}

@@ -1,7 +1,9 @@
 use crate::middleware::protect_route::JwtGuard;
 use crate::models::{
-    Channel, CreateChannelInput, CreateServerInput, S3File, Server, ServerIds, ServerType, User,
+    Channel, CreateChannelInput, CreateServerInput, EditServerInput, S3File, Server, ServerIds,
+    ServerSessionIdMap, ServerType, SessionIdWebsocketMap, User, UserJoin, WebSocketEvent,
 };
+use crate::utils::broadcast_ws_message::broadcast_ws_message;
 use crate::utils::{
     json_error::json_error,
     user_membership::{ByChannel, ByServer, UserMembershipChecker},
@@ -22,7 +24,6 @@ use rocket_db_pools::Connection;
 use validator::{Validate, ValidationErrors};
 
 // get servers with server_type = sever for user for sidebar
-// TODO: make it so that theres an order?
 #[get("/get/<server_type>")]
 pub async fn get_servers(
     guard: JwtGuard,
@@ -46,7 +47,8 @@ pub async fn get_servers(
         s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
         FROM servers s
         JOIN users_servers us ON us.server_id = s.server_id
-        WHERE us.user_id = $1 AND s.server_type = $2"#,
+        WHERE us.user_id = $1 AND s.server_type = $2
+        ORDER BY joined_date DESC"#,
         user_id,
         server_type_enum as ServerType
     )
@@ -127,6 +129,8 @@ pub async fn get_servers_popular(
 pub async fn join_server(
     guard: JwtGuard,
     server_id: i32,
+    websocket_map_state: &rocket::State<SessionIdWebsocketMap>,
+    server_map_state: &rocket::State<ServerSessionIdMap>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<models::Server>, (Status, Json<ErrorResponse>)> {
     let user_id = &guard.0.sub;
@@ -158,6 +162,27 @@ pub async fn join_server(
     }
 
     join_server_helper(*user_id, server_id, &mut db).await?;
+
+    // broadcast user info to people online in the server (to update message map)
+    let user = sqlx::query_as!(
+        User,
+        "SELECT user_id, display_username, profile_picture, date_joined
+        FROM users WHERE user_id = $1",
+        user_id
+    )
+    .fetch_one(&mut **db)
+    .await
+    .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+
+    let event = WebSocketEvent::UserJoin(UserJoin { user, server_id });
+    // turn to json string
+    let user_json = serde_json::to_string(&event).map_err(|_| {
+        (
+            Status::InternalServerError,
+            json_error("serialization error"),
+        )
+    })?;
+    broadcast_ws_message(&user_json, server_id, websocket_map_state, server_map_state).await;
 
     Ok::<_, (Status, Json<ErrorResponse>)>(Json(server))
 }
@@ -226,21 +251,21 @@ pub async fn join_server(
 //     Ok(Json(server))
 // }
 
-#[post("/create", data = "<server>")]
+#[post("/create", data = "<server_input>")]
 pub async fn create_server(
     guard: JwtGuard,
-    server: Form<CreateServerInput>,
+    server_input: Form<CreateServerInput>,
     aws_client: &State<Client>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<Server>, (Status, Json<ErrorResponse>)> {
-    server
+    server_input
         .validate()
         .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
 
-    let server_type: ServerType = server.server_type;
-    let recipient_ids: &Vec<i32> = &server.recipient_ids;
-    let server_name: &String = &server.server_name;
-    let server_icon = &server.server_icon;
+    let server_type: ServerType = server_input.server_type;
+    let recipient_ids: &Vec<i32> = &server_input.recipient_ids;
+    let server_name: &String = &server_input.server_name;
+    let server_icon = &server_input.server_icon;
     let user_id: &i32 = &guard.0.sub;
 
     // validate num recipients given server type
@@ -279,7 +304,7 @@ pub async fn create_server(
     };
 
     // put server icon into S3 bucket, if server_icon provided
-    if let Some(server_icon) = &server.server_icon {
+    if let Some(server_icon) = &server_input.server_icon {
         upload_to_s3(
             aws_client,
             &server_icon.key,
@@ -309,6 +334,113 @@ pub async fn create_server(
     Ok(Json(server))
 }
 
+#[patch("/edit/<server_id>", data = "<server_input>")]
+pub async fn edit_server(
+    guard: JwtGuard,
+    server_id: i32,
+    server_input: Form<EditServerInput>,
+    aws_client: &State<Client>,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<Server>, (Status, Json<ErrorResponse>)> {
+    server_input
+        .validate()
+        .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
+
+    let server_name = &server_input.server_name;
+    let server_icon = &server_input.server_icon;
+    let user_id: &i32 = &guard.0.sub;
+
+    is_admin(user_id, server_id, &mut db).await?;
+
+    // change server_icon if provided
+    if let Some(server_icon) = server_icon {
+        upload_to_s3(
+            aws_client,
+            &server_icon.key,
+            ByteStream::from(server_icon.data.value.clone()),
+        )
+        .await
+        .map_err(|_| (Status::BadRequest, json_error("Server picture S3 failed")))?;
+
+        let old_icon_key = sqlx::query_scalar!(
+            "SELECT s3_icon_key FROM servers WHERE server_id = $1",
+            server_id
+        )
+        .fetch_one(&mut **db)
+        .await
+        .map_err(|_| {
+            (
+                Status::InternalServerError,
+                json_error("Database error; does server_id exist?"),
+            )
+        })?;
+
+        // if there was a previous icon, remove it from s3
+        if let Some(old_icon_key) = old_icon_key {
+            remove_from_s3(aws_client, &old_icon_key)
+                .await
+                .map_err(|_| (Status::BadRequest, json_error("Server picture S3 failed")))?;
+        }
+
+        sqlx::query!(
+            r#"UPDATE servers
+            SET s3_icon_key = $1
+            WHERE server_id = $2
+            "#,
+            server_icon.key,
+            server_id
+        )
+        .execute(&mut **db)
+        .await
+        .map_err(|_| {
+            (
+                Status::InternalServerError,
+                json_error("Database error; does server_id exist?"),
+            )
+        })?;
+    };
+
+    // change server_name if provided
+    if let Some(server_name) = server_name {
+        sqlx::query!(
+            r#"UPDATE servers
+            SET server_name = $1
+            WHERE server_id = $2
+            "#,
+            server_name,
+            server_id
+        )
+        .execute(&mut **db)
+        .await
+        .map_err(|_| {
+            (
+                Status::InternalServerError,
+                json_error("Database error; does server_id exist?"),
+            )
+        })?;
+    };
+
+    let server = sqlx::query_as!(
+        Server,
+        r#"SELECT
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
+        FROM servers
+        WHERE server_id = $1
+        "#,
+        server_id,
+    )
+    .fetch_one(&mut **db)
+    .await
+    .map_err(|_| {
+        (
+            Status::InternalServerError,
+            json_error("Database error; does server_id exist?"),
+        )
+    })?;
+
+    Ok(Json(server))
+}
+
 // TODO: move to utils?
 async fn upload_to_s3(
     aws_client: &Client,
@@ -325,6 +457,22 @@ async fn upload_to_s3(
         .bucket(s3_bucket)
         .key(key)
         .body(byte_stream)
+        .send()
+        .await?;
+
+    Ok(())
+}
+
+async fn remove_from_s3(aws_client: &Client, key: &str) -> Result<(), aws_sdk_s3::Error> {
+    let s3_bucket: String = dotenv::var("S3_IMAGE_BUCKET")
+        .expect("set S3_IMAGE_BUCKET in .env")
+        .parse::<String>()
+        .unwrap();
+
+    aws_client
+        .delete_object()
+        .bucket(s3_bucket)
+        .key(key)
         .send()
         .await?;
 
@@ -417,6 +565,94 @@ async fn join_server_helper(
     .execute(&mut ***db)
     .await
     .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+
+    Ok(())
+}
+
+#[delete("/delete/<server_id>")]
+pub async fn delete_server(
+    guard: JwtGuard,
+    server_id: i32,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<(), (Status, Json<ErrorResponse>)> {
+    let user_id = &guard.0.sub;
+
+    is_admin(user_id, server_id, &mut db).await?;
+
+    // delete server
+    sqlx::query!("DELETE FROM servers WHERE server_id = $1", server_id)
+        .execute(&mut **db)
+        .await
+        .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
+
+    Ok(())
+}
+
+// check if user is admin of the server
+async fn is_admin(
+    user_id: &i32,
+    server_id: i32,
+    db: &mut Connection<database::HarmonyDb>,
+) -> Result<(), (Status, Json<ErrorResponse>)> {
+    // check if user is admin of the server
+    let admins = sqlx::query_scalar!("SELECT admins FROM servers WHERE server_id = $1", server_id)
+        .fetch_one(&mut ***db)
+        .await
+        .map_err(|_| {
+            (
+                Status::BadRequest,
+                json_error("Database error. Does server_id exist?"),
+            )
+        })?;
+
+    if !admins.contains(user_id) {
+        return Err((
+            Status::Unauthorized,
+            json_error("User is not admin in this server"),
+        ));
+    };
+    Ok(())
+}
+
+#[delete("/leave/<server_id>")]
+pub async fn leave_server(
+    guard: JwtGuard,
+    server_id: i32,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<(), (Status, Json<ErrorResponse>)> {
+    let user_id = &guard.0.sub;
+
+    // leave server
+    sqlx::query!(
+        "DELETE FROM users_servers
+        WHERE server_id = $1 AND user_id = $2",
+        server_id,
+        user_id
+    )
+    .execute(&mut **db)
+    .await
+    .map_err(|_| {
+        (
+            Status::BadRequest,
+            json_error("Database error. Does server_id exist?"),
+        )
+    })?;
+
+    // decrement users
+    sqlx::query!(
+        "UPDATE servers
+        SET members = members - 1
+        WHERE server_id = $1",
+        server_id
+    )
+    .execute(&mut **db)
+    .await
+    .map_err(|_| {
+        (
+            Status::BadRequest,
+            json_error("Database error. Does server_id exist?"),
+        )
+    })?;
 
     Ok(())
 }

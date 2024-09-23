@@ -3,19 +3,17 @@ import toast from "react-hot-toast";
 import useServer from "../zustand/useServer";
 
 // usually only for server type server, cause the other server types need serverids and userslist
-const useJoinServer = () => {
+const useLeaveServer = () => {
   const [loading, setLoading] = useState(false);
-  const addServer = useServer((state) => state.addServer);
-  const joinServer = async (server_id) => {
+  const removeServer = useServer((state) => state.removeServer);
+  const leaveServer = async (server_id) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/servers/join/${server_id}`, {
-        method: "POST",
+      const res = await fetch(`/api/servers/leave/${server_id}`, {
+        method: "DELETE",
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      addServer(data);
-      return data;
+      if (!res.ok) throw new Error((await res.json()).error);
+      removeServer(server_id);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -23,7 +21,7 @@ const useJoinServer = () => {
     }
   };
 
-  return { loading, joinServer };
+  return { loading, leaveServer };
 };
 
-export default useJoinServer;
+export default useLeaveServer;
