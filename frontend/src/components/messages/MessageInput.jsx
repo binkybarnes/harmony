@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useSendMessage from "../../hooks/useSendMessage.js";
 import { useAuthContext } from "../../context/AuthContext.jsx";
 import { usePopupContext } from "../popups/PopupContext.jsx";
+import toast from "react-hot-toast";
 const MessageInput = () => {
   const { loading, sendMessage } = useSendMessage();
   const [message, setMessage] = useState("");
@@ -14,7 +15,9 @@ const MessageInput = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (message) {
+    if (message.length >= 600) {
+      toast.error("Message longer than 600 characters");
+    } else if (message) {
       await sendMessage(
         message,
         authUser.display_username,

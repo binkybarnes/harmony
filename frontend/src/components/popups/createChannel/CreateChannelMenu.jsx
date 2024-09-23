@@ -53,9 +53,8 @@ const CreateChannelMenu = () => {
     };
   }, [onClose, channelMenu.visible]);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (channelName.length > 30) {
+  const submit = async () => {
+    if (!channelName || channelName.length > 30) {
       toast.error("Channel name too long");
     } else {
       await createChannel(selectedServer.server_id, channelName);
@@ -63,12 +62,16 @@ const CreateChannelMenu = () => {
       onClose();
     }
   };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await submit();
+  };
 
   const handleInputKeyDown = async (event) => {
     // idk why enter doesnt submit the form
     if (event.key === "Enter") {
-      await createChannel(selectedServer.server_id, channelName);
-      onClose();
+      event.preventDefault();
+      await submit();
     }
   };
 

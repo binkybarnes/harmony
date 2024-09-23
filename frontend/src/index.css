@@ -216,6 +216,8 @@ input:focus {
     font-weight: 500;
     z-index: 500;
     transform: translateY(-50%);
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .server-tooltip::before {

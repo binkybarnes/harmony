@@ -1,13 +1,26 @@
 import PropTypes from "prop-types";
 import { usePopupContext } from "../popups/PopupContext";
 import useServer from "../../zustand/useServer";
+import { useMemo } from "react";
 
 const Server = ({ server }) => {
   const { handleServerHover } = usePopupContext();
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
+  const selectedServer = useServer((state) => state.selectedServer);
 
   const serverName = server.server_name;
+
+  const serverNameAbbrev = useMemo(
+    () =>
+      serverName
+        .trim()
+        .split(/([^a-zA-Z0-9]+)/)
+        .filter((char) => char.match(/\S/))
+        .map((word) => word[0])
+        .join(""),
+    [serverName],
+  );
 
   const handleMouseEnter = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -31,16 +44,29 @@ const Server = ({ server }) => {
       onClick={handleClick}
       className="group mb-2"
     >
-      <div className="overflow-hidden rounded-md bg-cyan-200 transition-all duration-100 group-hover:cursor-pointer group-hover:rounded-[1.2rem] group-active:translate-y-[1.5px]">
-        <img
-          draggable={false}
-          className="h-[48px] w-[48px]"
-          src={
-            server.s3_icon_key
-              ? `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${server.s3_icon_key}`
-              : `https://robohash.org/${serverName}`
-          }
-        />
+      <div
+        className={`overflow-hidden ${
+          selectedServer?.server_id === server.server_id
+            ? "rounded-[1.2rem] bg-green-700"
+            : "rounded-md bg-cyan-700"
+        } transition-all duration-100 hover:bg-green-700 group-hover:cursor-pointer group-hover:rounded-[1.2rem] group-active:translate-y-[1.5px]`}
+      >
+        {server.s3_icon_key ? (
+          <img
+            draggable={false}
+            className="h-[48px] w-[48px]"
+            src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${server.s3_icon_key}`}
+          />
+        ) : (
+          <div
+            style={{
+              fontSize: `clamp(0.625rem, ${4 / serverNameAbbrev.length}rem, 1rem)`,
+            }}
+            className="flex h-[48px] w-[48px] items-center justify-center text-white"
+          >
+            {serverNameAbbrev}
+          </div>
+        )}
       </div>
     </div>
   );

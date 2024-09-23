@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TbBrandAmongUs } from "react-icons/tb";
 import { CSSTransition } from "react-transition-group";
 import { IoIosClose } from "react-icons/io";
@@ -13,6 +13,9 @@ const ServerSettingsMenu = () => {
   const menuRef = useRef(null);
   const inputRef = useRef(null);
   const selectedServer = useServer((state) => state.selectedServer);
+  const setSelectedServer = useServer((state) => state.setSelectedServer);
+  const servers = useServer((state) => state.servers);
+  const setServers = useServer((state) => state.setServers);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
   const {
     serverSettingsMenu,
@@ -133,9 +136,8 @@ const ServerSettingsMenu = () => {
     }
   }, []);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (serverName.length > 30) {
+  const submit = async () => {
+    if (!infoChanged || !serverName || serverName.length > 30) {
       toast.error("Server name too long");
     } else {
       const newServer = await editServer(
@@ -144,11 +146,39 @@ const ServerSettingsMenu = () => {
         serverIcon,
       );
       if (newServer) {
-        // TODO: update the changes
+        setServers(
+          servers.map((server) =>
+            server.server_id === selectedServer.server_id ? newServer : server,
+          ),
+        );
+        setSelectedServer(newServer);
       }
       onClose();
     }
   };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await submit();
+  };
+
+  const handleInputKeyDown = async (event) => {
+    // idk why enter doesnt submit the form
+    if (event.key === "Enter") {
+      event.preventDefault();
+      await submit();
+    }
+  };
+
+  const serverNameAbbrev = useMemo(
+    () =>
+      serverName
+        .trim()
+        .split(/([^a-zA-Z0-9]+)/)
+        .filter((char) => char.match(/\S/))
+        .map((word) => word[0])
+        .join(""),
+    [serverName],
+  );
 
   return (
     <CSSTransition
@@ -160,7 +190,7 @@ const ServerSettingsMenu = () => {
       onEntering={() => {
         setButtonsDisabled(true);
         setServerName(selectedServer.server_name);
-        setServerIcon(null);
+        setPreviewUrl(null);
       }}
       onEntered={() => setButtonsDisabled(false)}
       onExiting={() => setButtonsDisabled(true)}
@@ -179,18 +209,27 @@ const ServerSettingsMenu = () => {
               </div>
 
               <div className="mb-4 flex gap-5">
-                <div className="group relative h-[144px] w-[144px] overflow-hidden rounded-md">
-                  <img
-                    draggable={false}
-                    className="h-[144px] w-[144px]"
-                    src={
-                      serverIcon
-                        ? previewUrl
-                        : selectedServer && selectedServer.s3_icon_key
-                          ? `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${selectedServer.s3_icon_key}`
-                          : `https://robohash.org/${serverName}`
-                    }
-                  />
+                <div className="group relative h-[144px] w-[144px] overflow-hidden rounded-md bg-cyan-700">
+                  {selectedServer?.s3_icon_key || previewUrl ? (
+                    <img
+                      draggable={false}
+                      className="h-[144px] w-[144px]"
+                      src={
+                        previewUrl
+                          ? previewUrl
+                          : `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${selectedServer?.s3_icon_key}`
+                      }
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        fontSize: `clamp(1.875rem, ${12 / serverNameAbbrev.length}rem, 3rem)`,
+                      }}
+                      className="flex h-[144px] w-[144px] items-center justify-center text-white"
+                    >
+                      {serverNameAbbrev}
+                    </div>
+                  )}
                   <input
                     onChange={handleFileChange}
                     style={{ fontSize: "0px" }}
@@ -220,6 +259,7 @@ const ServerSettingsMenu = () => {
                   <h3 className="mb-2 flex-1 text-xs font-bold">SERVER NAME</h3>
                   <div className="rounded-md bg-base-100">
                     <input
+                      onKeyDown={handleInputKeyDown}
                       value={serverName}
                       type="text"
                       onChange={handleInputChange}

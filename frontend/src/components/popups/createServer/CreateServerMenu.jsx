@@ -12,6 +12,7 @@ import UploadImageIcon from "./UploadImageIcon";
 const CreateServerMenu = () => {
   const menuRef = useRef(null);
   const setSelectedServer = useServer((state) => state.setSelectedServer);
+  const setSelectedChannel = useServer((state) => state.setSelectedChannel);
   const addServer = useServer((state) => state.addServer);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
   const { createServer } = useCreateServer();
@@ -60,17 +61,29 @@ const CreateServerMenu = () => {
     };
   }, [onClose, serverMenu.visible]);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (serverName.length > 30) {
+  const submit = async () => {
+    if (!serverName || serverName.length > 30) {
       toast.error("Server name too long");
     } else {
       const newServer = await createServer(serverName, serverIcon);
       if (newServer) {
         addServer(newServer);
         setSelectedServer(newServer);
+        setSelectedChannel(null);
       }
       onClose();
+    }
+  };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await submit();
+  };
+
+  const handleInputKeyDown = async (event) => {
+    // for some reason enter submits the form
+    if (event.key === "Enter") {
+      event.preventDefault();
+      await submit();
     }
   };
 
@@ -187,6 +200,7 @@ const CreateServerMenu = () => {
                 <h2 className="mb-2 text-xs font-bold">SERVER NAME</h2>
                 <div className="h-10 rounded-md bg-base-100 pl-2">
                   <input
+                    onKeyDown={handleInputKeyDown}
                     ref={inputRef}
                     value={serverName}
                     onChange={handleInputChange}
