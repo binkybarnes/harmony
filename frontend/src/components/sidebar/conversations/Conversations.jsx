@@ -4,34 +4,42 @@ import toast from "react-hot-toast";
 import { useEffect, useMemo, useState } from "react";
 import useConversationInfo from "../../../hooks/useConversationInfo";
 import { useWebsocketContext } from "../../../context/WebsocketContext";
+import useServer from "../../../zustand/useServer";
 
 // TODO: START CACHEING EVERYTHING
+// TODO: make last messaged conversation the top
 const Conversations = () => {
-  useWebsocketContext();
+  // useWebsocketContext();
 
+  const conversations = useServer((state) => state.conversations);
+  const setConversations = useServer((state) => state.setConversations);
   // TODO: put groupchats in here
-  const { loading, servers, serverIds, usersList, channelsList } =
+  // TODO: handle the server name in the backend?
+  const { loading, servers, usersList, channelsList } =
     useConversationInfo("Dm");
 
-  const mapDmConversations = useMemo(
-    () =>
-      usersList.map((users, i) => {
-        if (users.length != 2) {
-          toast.error("DM servers should have only 2 members");
-          return null;
-        }
+  useEffect(() => setConversations(servers), [servers, setConversations]);
 
-        return (
-          <Conversation
-            key={servers[i].server_id}
-            users={users}
-            server={servers[i]}
-            channel={channelsList[i][0]}
-          />
-        );
-      }),
-    [usersList, channelsList, servers],
-  );
+  const mapDmConversations = useMemo(() => {
+    if (!conversations || !channelsList || !usersList) {
+      return null;
+    }
+    return usersList.map((users, i) => {
+      if (users.length != 2) {
+        toast.error("DM servers should have only 2 members");
+        return null;
+      }
+
+      return (
+        <Conversation
+          key={conversations[i].server_id}
+          users={users}
+          server={conversations[i]}
+          channel={channelsList[i][0]}
+        />
+      );
+    });
+  }, [usersList, channelsList, conversations]);
 
   return (
     <nav className="scrollbar-sidebar visible-on-hover flex-1 overflow-y-scroll pl-2">

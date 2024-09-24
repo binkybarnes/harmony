@@ -150,6 +150,20 @@ pub struct CreateServerInput {
     pub server_icon: Option<S3File>,
 }
 
+#[derive(Serialize)]
+pub struct ServerChannel {
+    pub server: Server,
+    // default channel
+    pub channel: Channel,
+}
+
+#[derive(Serialize)]
+pub struct OptionalServerChannel {
+    pub server: Option<Server>,
+    // default channel
+    pub channel: Option<Channel>,
+}
+
 #[derive(FromForm, Validate)]
 pub struct EditServerInput {
     #[validate(length(min = 1, max = 30))]

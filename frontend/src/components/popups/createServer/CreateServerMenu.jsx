@@ -65,11 +65,16 @@ const CreateServerMenu = () => {
     if (!serverName || serverName.length > 30) {
       toast.error("Server name too long");
     } else {
-      const newServer = await createServer(serverName, serverIcon);
+      const { server: newServer, channel: newChannel } = await createServer(
+        serverName,
+        serverIcon,
+        [],
+        "Server",
+      );
       if (newServer) {
         addServer(newServer);
         setSelectedServer(newServer);
-        setSelectedChannel(null);
+        setSelectedChannel(newChannel);
       }
       onClose();
     }

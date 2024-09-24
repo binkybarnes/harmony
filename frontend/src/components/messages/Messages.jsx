@@ -2,10 +2,11 @@ import useGetMessages from "../../hooks/useGetMessages";
 import MessagesSkeleton from "../skeletons/MessagesSkeleton/MessagesSkeleton";
 import Message from "./Message";
 import useServer from "../../zustand/useServer";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import useGetUsers from "../../hooks/useGetUsers";
 import { formatTime } from "../../utils/formatTime";
 import useListenMessages from "../../hooks/websocketListeners/useListenMessages";
+import { usePopupContext } from "../popups/PopupContext";
 
 const Messages = () => {
   const {
@@ -55,12 +56,46 @@ const Messages = () => {
   // dont render messages if loading, cause it would be the previous channel's messages
   // maybe add message cacheing
 
+  // TODO: put functions outside with the mapper
+  // TODO: fix the handle submit functions by just adding the event parameter with it
+  // TODO: use cursor based pagination to load only a subset of messages at a time
+  const { setUserMenu, setModalOverlayVisible } = usePopupContext();
+
+  const handleClick = useCallback(
+    (event, user_id, display_username, profile_picture) => {
+      event.stopPropagation();
+      setModalOverlayVisible(true);
+      setUserMenu({
+        visible: true,
+        user: {
+          user_id,
+          display_username,
+          profile_picture,
+        },
+      });
+    },
+    [setModalOverlayVisible, setUserMenu],
+  );
+
   const mapMessages = useMemo(
     () =>
       messages.map((message) => {
-        return <Message message={message} key={message.message_id} />;
+        return (
+          <Message
+            message={message}
+            key={message.message_id}
+            handleClick={(event) =>
+              handleClick(
+                event,
+                message.user_id,
+                message.display_username,
+                message.profile_picture,
+              )
+            }
+          />
+        );
       }),
-    [messages],
+    [messages, handleClick],
   );
 
   // scroll to bottom of messages

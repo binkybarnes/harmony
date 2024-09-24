@@ -25,7 +25,7 @@ const DiscoverServers = () => {
 
   return (
     <div className="scrollbar-messages h-screen min-w-[480px] flex-1 overflow-x-hidden overflow-y-scroll bg-base-100 p-8">
-      <div className="mb-4 flex justify-center">
+      <div className="mb-20 flex justify-center">
         <div className="w-[720px] text-center">
           <h1 className="mb-2 text-xl font-semibold text-neutral-200">
             Join a server

@@ -1,7 +1,7 @@
 // only for server type Dm and groupchat
 // combines useGetServers and useGetUsers since conversations needs the info of both
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 // conversation is a server, that has 1 channel, treated as both
@@ -9,11 +9,10 @@ import toast from "react-hot-toast";
 const useConversationInfo = (serverType) => {
   const [loading, setLoading] = useState(false);
   const [servers, setServers] = useState([]);
-  const [serverIds, setServerIds] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [channelsList, setChannelsList] = useState([]);
 
-  const fetchServers = async () => {
+  const fetchServers = useCallback(async () => {
     try {
       const res = await fetch(`/api/servers/get/${serverType}`);
       const data = await res.json();
@@ -25,7 +24,7 @@ const useConversationInfo = (serverType) => {
       toast.error(error.message);
       return null;
     }
-  };
+  }, [serverType]);
   const fetchChannels = async (server_ids) => {
     try {
       const res = await fetch("/api/servers/channels-list", {
@@ -76,7 +75,6 @@ const useConversationInfo = (serverType) => {
       }
       setServers(serversData);
       const serverIds = serversData.map((server) => server.server_id);
-      setServerIds(serverIds);
 
       const [channelsData, usersData] = await Promise.all([
         fetchChannels(serverIds),
@@ -89,7 +87,7 @@ const useConversationInfo = (serverType) => {
     };
 
     fetchData();
-  }, []);
+  }, [fetchServers]);
 
   return { loading, servers, usersList, channelsList };
 };

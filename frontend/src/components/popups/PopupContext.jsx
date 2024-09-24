@@ -82,6 +82,20 @@ const PopupProvider = ({ children }) => {
     }));
   };
 
+  // Server Settings Menu  --------------------------------------------------------
+  const [userMenu, setUserMenu] = useState({
+    visible: false,
+    user: {},
+  });
+
+  // const setUserMenuVisible = (visible) => {
+  //   setPopupActive(visible);
+  //   setUserMenu((prev) => ({
+  //     ...prev,
+  //     visible,
+  //   }));
+  // };
+
   // Modal Overlay  --------------------------------------------------------
   const [modalOverlay, setModalOverlay] = useState({
     visible: false,
@@ -116,6 +130,8 @@ const PopupProvider = ({ children }) => {
         setServerMenuVisible,
         serverSettingsMenu,
         setServerSettingsMenuVisible,
+        userMenu,
+        setUserMenu,
       }}
     >
       {children}

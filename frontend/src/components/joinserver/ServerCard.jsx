@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import useJoinServer from "../../hooks/useJoinServer";
 import useServer from "../../zustand/useServer";
+import { useMemo } from "react";
 const ServerCard = ({ server }) => {
   const { loading, joinServer } = useJoinServer();
   const setSelectedServer = useServer((state) => state.setSelectedServer);
@@ -10,17 +11,42 @@ const ServerCard = ({ server }) => {
     setSelectedChannel(null);
     setSelectedServer(server);
   };
+  const serverNameAbbrev = useMemo(
+    () =>
+      server.server_name
+        .trim()
+        .split(/([^a-zA-Z0-9]+)/)
+        .filter((char) => char.match(/\S/))
+        .map((word) => word[0])
+        .join(""),
+    [server.server_name],
+  );
+
   return (
     <button
       disabled={loading}
       onClick={handleClick}
       className="server-card flex w-48 flex-col overflow-hidden rounded-md bg-red-500 hover:cursor-pointer"
     >
-      <img
-        draggable={false}
-        className="h-48 w-full object-cover"
-        src="https://cdn.discordapp.com/discovery-splashes/662267976984297473/4798759e115d2500fef16347d578729a.jpg?size=600"
-      />
+      <div className="bg-cyan-700">
+        {server.s3_icon_key ? (
+          <img
+            draggable={false}
+            className="h-48 w-48"
+            src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${server.s3_icon_key}`}
+          />
+        ) : (
+          <div
+            style={{
+              fontSize: `clamp(2.5rem, ${16 / serverNameAbbrev.length}rem, 4rem)`,
+            }}
+            className="flex h-48 w-48 items-center justify-center text-white"
+          >
+            {serverNameAbbrev}
+          </div>
+        )}
+      </div>
+
       <div className="w-full px-2 py-1">
         <h3 className="truncate text-left font-semibold text-neutral-200">
           {server.server_name}
@@ -48,6 +74,7 @@ ServerCard.propTypes = {
     server_type: PropTypes.string,
     members: PropTypes.number,
     server_name: PropTypes.string,
+    s3_icon_key: PropTypes.string,
   }),
 };
 

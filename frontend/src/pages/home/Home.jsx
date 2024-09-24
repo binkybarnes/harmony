@@ -13,6 +13,7 @@ import useServer from "../../zustand/useServer";
 import CreateServerMenu from "../../components/popups/createServer/CreateServerMenu";
 import { Navigate, Route, Routes, Router } from "react-router-dom";
 import ServerSettingsMenu from "../../components/popups/serverSettings/ServerSettingsMenu";
+import UserMenu from "../../components/popups/userMenu/UserMenu";
 
 const Home = () => {
   const selectedServer = useServer((state) => state.selectedServer);
@@ -54,6 +55,7 @@ const Home = () => {
           <CreateChannelMenu />
           <CreateServerMenu />
           <ServerSettingsMenu />
+          <UserMenu />
         </div>
       </PopupProvider>
     </div>

@@ -191,6 +191,7 @@ const ServerSettingsMenu = () => {
         setButtonsDisabled(true);
         setServerName(selectedServer.server_name);
         setPreviewUrl(null);
+        setServerIcon(null);
       }}
       onEntered={() => setButtonsDisabled(false)}
       onExiting={() => setButtonsDisabled(true)}

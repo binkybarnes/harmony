@@ -23,6 +23,13 @@ const useServer = create((set) => ({
     set((state) => ({
       servers: state.servers.filter((server) => server.server_id !== server_id),
     })),
+
+  conversations: [],
+  setConversations: (conversations) => set({ conversations }),
+  addConversation: (newConversation) =>
+    set((state) => ({
+      conversations: [newConversation, ...state.conversations],
+    })),
 }));
 
 export default useServer;

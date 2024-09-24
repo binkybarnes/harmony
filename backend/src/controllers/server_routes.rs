@@ -1,7 +1,8 @@
 use crate::middleware::protect_route::JwtGuard;
 use crate::models::{
-    Channel, CreateChannelInput, CreateServerInput, EditServerInput, S3File, Server, ServerIds,
-    ServerSessionIdMap, ServerType, SessionIdWebsocketMap, User, UserJoin, WebSocketEvent,
+    Channel, CreateChannelInput, CreateServerInput, EditServerInput, OptionalServerChannel, S3File,
+    Server, ServerChannel, ServerIds, ServerSessionIdMap, ServerType, SessionIdWebsocketMap, User,
+    UserJoin, WebSocketEvent,
 };
 use crate::utils::broadcast_ws_message::broadcast_ws_message;
 use crate::utils::{
@@ -57,6 +58,58 @@ pub async fn get_servers(
     .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
 
     Ok(Json(servers))
+}
+
+// used in usermenu message button to check if dm exists
+#[get("/dms/<recipient_id>")]
+pub async fn get_dm(
+    guard: JwtGuard,
+    recipient_id: i32,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<Json<OptionalServerChannel>, (Status, Json<ErrorResponse>)> {
+    let user_id = &guard.0.sub;
+
+    let server = sqlx::query_as!(
+        Server,
+        r#"
+        SELECT
+        s.server_id, s.server_type AS "server_type!: ServerType", s.members, s.server_name, s.admins, s.s3_icon_key
+        FROM servers s
+        JOIN users_servers us1 ON s.server_id = us1.server_id
+        JOIN users_servers us2 ON s.server_id = us2.server_id
+        WHERE s.server_type = 'dm'
+        AND us1.user_id = $1
+        AND us2.user_id = $2
+        LIMIT 1
+        "#,
+        user_id,
+        recipient_id
+    )
+    .fetch_optional(&mut **db)
+    .await
+    .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+
+    if let Some(server) = server {
+        let channel = sqlx::query_as!(
+            Channel,
+            "SELECT * FROM channels
+    WHERE server_id = $1",
+            server.server_id
+        )
+        .fetch_one(&mut **db)
+        .await
+        .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
+
+        Ok(Json(OptionalServerChannel {
+            server: Some(server),
+            channel: Some(channel),
+        }))
+    } else {
+        Ok(Json(OptionalServerChannel {
+            server: None,
+            channel: None,
+        }))
+    }
 }
 
 #[get("/searchName?<name>")]
@@ -251,13 +304,14 @@ pub async fn join_server(
 //     Ok(Json(server))
 // }
 
+// returns server and default channel
 #[post("/create", data = "<server_input>")]
 pub async fn create_server(
     guard: JwtGuard,
     server_input: Form<CreateServerInput>,
     aws_client: &State<Client>,
     mut db: Connection<database::HarmonyDb>,
-) -> Result<Json<Server>, (Status, Json<ErrorResponse>)> {
+) -> Result<Json<ServerChannel>, (Status, Json<ErrorResponse>)> {
     server_input
         .validate()
         .map_err(|_| (Status::BadRequest, json_error("Failed JSON validation")))?;
@@ -292,6 +346,8 @@ pub async fn create_server(
                     json_error("Can not create DM with yourself"),
                 ));
             }
+
+            // TODO: check if there already exists a dm with the recipient
         }
         ServerType::GroupChat => {
             if recipients_len < 2 {
@@ -315,7 +371,7 @@ pub async fn create_server(
     }
 
     // make server
-    let server = create_server_helper(
+    let (server, channel) = create_server_helper(
         server_type,
         server_name,
         *user_id,
@@ -331,7 +387,7 @@ pub async fn create_server(
         join_server_helper(*recipient, server_id, &mut db).await?;
     }
 
-    Ok(Json(server))
+    Ok(Json(ServerChannel { server, channel }))
 }
 
 #[patch("/edit/<server_id>", data = "<server_input>")]
@@ -511,7 +567,7 @@ async fn create_server_helper(
     user_id: i32,
     server_icon_key: Option<&String>,
     db: &mut Connection<database::HarmonyDb>,
-) -> Result<Server, (Status, Json<ErrorResponse>)> {
+) -> Result<(Server, Channel), (Status, Json<ErrorResponse>)> {
     // make server
     // num members initially 0, members will be incremented in join_server
     let server = sqlx::query_as!(
@@ -529,9 +585,9 @@ async fn create_server_helper(
     .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
     let server_id: i32 = server.server_id;
 
-    create_channel_helper(server_id, "general", db).await?;
+    let channel = create_channel_helper(server_id, "general", db).await?;
 
-    Ok(server)
+    Ok((server, channel))
 }
 async fn join_server_helper(
     user_id: i32,
