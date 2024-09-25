@@ -43,7 +43,7 @@ pub struct UserLoginInput<'r> {
 pub struct User {
     pub user_id: i32,
     pub display_username: String,
-    pub profile_picture: String,
+    pub s3_icon_key: Option<String>,
     pub date_joined: NaiveDate,
 }
 
@@ -65,7 +65,7 @@ pub struct SendMessageInput {
     pub server_id: i32,
     pub message: String,
     pub display_username: String,
-    pub profile_picture: String,
+    pub s3_icon_key: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -81,7 +81,7 @@ pub struct Message {
     pub message: String,
     pub timestamp: DateTime<Utc>,
     pub display_username: String,
-    pub profile_picture: String,
+    pub s3_icon_key: Option<String>,
 }
 
 // #[derive(Deserialize)]
@@ -169,6 +169,11 @@ pub struct EditServerInput {
     #[validate(length(min = 1, max = 30))]
     pub server_name: Option<String>,
     pub server_icon: Option<S3File>,
+}
+
+#[derive(FromForm, Validate)]
+pub struct EditUserInput {
+    pub user_icon: Option<S3File>,
 }
 
 #[derive(Deserialize)]

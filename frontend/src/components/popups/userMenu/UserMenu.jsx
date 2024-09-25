@@ -6,19 +6,24 @@ import { RiMessage3Line } from "react-icons/ri";
 import { useAuthContext } from "../../../context/AuthContext";
 import useCreateServer from "../../../hooks/useCreateServer";
 import useServer from "../../../zustand/useServer";
-import useConversationInfo from "../../../hooks/useConversationInfo";
 import useGetDm from "../../../hooks/useGetDm";
+import useImageUpload from "../../../utils/useImageUpload";
+import toast from "react-hot-toast";
+import useEditUser from "../../../hooks/useEditUser";
 
 // TODO: Make a factory for this mess
 const UserMenu = () => {
   const menuRef = useRef(null);
   const { userMenu, setUserMenu, setModalOverlayVisible } = usePopupContext();
-  const { authUser } = useAuthContext();
+  const { authUser, setAuthUser } = useAuthContext();
   const { createServer } = useCreateServer();
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
-  const addConversation = useServer((state) => state.addConversation);
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
+
+  const { icon, previewUrl, iconChanged, handleFileChange } = useImageUpload();
+  const { editUser } = useEditUser();
+  const isSelf = userMenu.user.user_id === authUser.user_id;
 
   const { getDm } = useGetDm();
 
@@ -78,6 +83,19 @@ const UserMenu = () => {
     onClose();
   };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!iconChanged) {
+      toast.error("Server name too long");
+    } else {
+      const newUser = await editUser(userMenu.user_id, icon);
+      if (newUser) {
+        setAuthUser(newUser);
+      }
+      onClose();
+    }
+  };
+
   return (
     <CSSTransition
       in={userMenu.visible}
@@ -92,7 +110,7 @@ const UserMenu = () => {
       onExiting={() => setButtonsDisabled(true)}
     >
       <div className="absolute left-0 top-0 flex h-screen w-screen items-center justify-center">
-        <form ref={menuRef}>
+        <form onSubmit={handleSubmit} ref={menuRef}>
           <fieldset disabled={buttonsDisabled}>
             <div className="w-[460px] rounded-md bg-green-200 p-4">
               <div className="flex justify-between">
@@ -105,10 +123,39 @@ const UserMenu = () => {
               </div>
 
               <div className="justify-apart flex justify-between">
-                <div className="h-[144px] w-[144px] overflow-hidden rounded-md">
-                  <div className="h-[144px] w-[144px] bg-red-500">IMAGE</div>
+                <div className="group relative h-[144px] w-[144px] overflow-hidden rounded-md bg-cyan-700">
+                  {userMenu.user?.s3_icon_key || previewUrl ? (
+                    <img
+                      draggable={false}
+                      className="h-[144px] w-[144px]"
+                      src={
+                        previewUrl
+                          ? previewUrl
+                          : `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${userMenu.user.s3_icon_key}`
+                      }
+                    />
+                  ) : (
+                    <div className="h-[144px] w-[144px] overflow-hidden rounded-md bg-red-500">
+                      <img
+                        className="h-[144px] w-[144px]"
+                        src={`https://robohash.org/${userMenu.user.display_name}`}
+                      />
+                    </div>
+                  )}
+
+                  <input
+                    onChange={handleFileChange}
+                    style={{ fontSize: "0px" }}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                    className="absolute left-0 top-0 h-full w-full opacity-0 hover:cursor-pointer"
+                  />
+                  <div className="pointer-events-none invisible absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-xs font-bold text-white group-hover:visible">
+                    CHANGE ICON
+                  </div>
                 </div>
-                {authUser.user_id !== userMenu.user.user_id ? (
+
+                {!isSelf ? (
                   <button
                     onClick={handleMessageClick}
                     className="self-end rounded-md bg-red-500 px-2 py-1.5 text-white hover:bg-yellow-500"
@@ -120,6 +167,23 @@ const UserMenu = () => {
                   </button>
                 ) : null}
               </div>
+
+              {isSelf ? (
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={onClose}
+                    className="h-9 rounded-md px-4 hover:underline"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={!iconChanged}
+                    className={`h-9 rounded-md ${!iconChanged ? "cursor-not-allowed bg-red-500 text-yellow-500" : "bg-cyan-400 text-lime-400"} px-4`}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              ) : null}
             </div>
           </fieldset>
         </form>

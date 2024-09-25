@@ -31,7 +31,7 @@ pub async fn send_message(
     let message = &message_json.message;
 
     let display_username = &message_json.display_username;
-    let profile_picture = &message_json.profile_picture;
+    let s3_icon_key = &message_json.s3_icon_key;
 
     // check if user is in the server that has the channel the message is being sent to
     let channel_checker = ByChannel { channel_id };
@@ -39,14 +39,14 @@ pub async fn send_message(
 
     let message = sqlx::query_as!(
         models::Message,
-        "INSERT INTO messages (user_id, channel_id, message, display_username, profile_picture)
+        "INSERT INTO messages (user_id, channel_id, message, display_username, s3_icon_key)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *",
         user_id,
         channel_id,
         message,
         display_username,
-        profile_picture
+        s3_icon_key.as_deref()
     )
     .fetch_one(&mut **db)
     .await

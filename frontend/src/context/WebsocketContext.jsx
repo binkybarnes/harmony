@@ -35,7 +35,7 @@ export const WebsocketContextProvider = ({ children }) => {
         setWebsocket(null);
       }
     }
-  }, [authUser]);
+  }, [authUser?.user_id]);
   return (
     <WebsocketContext.Provider value={{ websocket }}>
       {children}

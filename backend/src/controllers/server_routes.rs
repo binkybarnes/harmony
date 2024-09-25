@@ -4,6 +4,7 @@ use crate::models::{
     Server, ServerChannel, ServerCreated, ServerIds, ServerSessionIdMap, ServerType,
     SessionIdWebsocketMap, User, UserJoin, UserSessionIdMap, WebSocketEvent,
 };
+use crate::utils::aws_s3_utils::{remove_from_s3, upload_to_s3};
 use crate::utils::broadcast_ws_message::{broadcast_to_server, broadcast_to_users};
 use crate::utils::{
     json_error::json_error,
@@ -229,7 +230,7 @@ pub async fn join_server(
     // broadcast user info to people online in the server (to update message map)
     let user = sqlx::query_as!(
         User,
-        "SELECT user_id, display_username, profile_picture, date_joined
+        "SELECT user_id, display_username, s3_icon_key, date_joined
         FROM users WHERE user_id = $1",
         user_id
     )
@@ -474,7 +475,12 @@ pub async fn edit_server(
         if let Some(old_icon_key) = old_icon_key {
             remove_from_s3(aws_client, &old_icon_key)
                 .await
-                .map_err(|_| (Status::BadRequest, json_error("Server picture S3 failed")))?;
+                .map_err(|_| {
+                    (
+                        Status::BadRequest,
+                        json_error("Failed to remove server icon from S3"),
+                    )
+                })?;
         }
 
         sqlx::query!(
@@ -515,6 +521,7 @@ pub async fn edit_server(
         })?;
     };
 
+    // return updated server
     let server = sqlx::query_as!(
         Server,
         r#"SELECT
@@ -534,44 +541,6 @@ pub async fn edit_server(
     })?;
 
     Ok(Json(server))
-}
-
-// TODO: move to utils?
-async fn upload_to_s3(
-    aws_client: &Client,
-    key: &str,
-    byte_stream: ByteStream,
-) -> Result<(), aws_sdk_s3::Error> {
-    let s3_bucket: String = dotenv::var("S3_IMAGE_BUCKET")
-        .expect("set S3_IMAGE_BUCKET in .env")
-        .parse::<String>()
-        .unwrap();
-
-    aws_client
-        .put_object()
-        .bucket(s3_bucket)
-        .key(key)
-        .body(byte_stream)
-        .send()
-        .await?;
-
-    Ok(())
-}
-
-async fn remove_from_s3(aws_client: &Client, key: &str) -> Result<(), aws_sdk_s3::Error> {
-    let s3_bucket: String = dotenv::var("S3_IMAGE_BUCKET")
-        .expect("set S3_IMAGE_BUCKET in .env")
-        .parse::<String>()
-        .unwrap();
-
-    aws_client
-        .delete_object()
-        .bucket(s3_bucket)
-        .key(key)
-        .send()
-        .await?;
-
-    Ok(())
 }
 
 async fn create_channel_helper(
@@ -863,7 +832,7 @@ async fn get_users_helper(
 ) -> Result<Vec<User>, (Status, Json<ErrorResponse>)> {
     let users = sqlx::query_as!(
         User,
-        "SELECT u.user_id, display_username, profile_picture, date_joined
+        "SELECT u.user_id, display_username, s3_icon_key, date_joined
         FROM users u
         JOIN users_servers us ON u.user_id = us.user_id
         WHERE us.server_id = $1",

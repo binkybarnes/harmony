@@ -34,7 +34,7 @@ const Conversation = ({ conversation }) => {
       className={`mb-1 flex h-[52px] items-center gap-2 rounded-md bg-base-100 p-1.5 hover:cursor-pointer hover:bg-neutral-700 hover:text-neutral-300 active:bg-neutral-600 active:text-neutral-200 ${isSelected ? "bg-neutral-600 text-neutral-200" : ""} `}
     >
       <img
-        className="h-10 w-10 rounded-md"
+        className="h-10 w-10 rounded-md bg-red-500"
         src={`https://robohash.org/${conversationName}`}
       />
       <p className="truncate font-medium">{conversationName}</p>

@@ -11,11 +11,11 @@ const Profilebar = () => {
     setUserMenu({ visible: true, user: authUser });
   };
   return (
-    <div
-      onClick={handleClick}
-      className="mx-2 flex items-center justify-between rounded-md bg-base-100 p-1.5 hover:cursor-pointer"
-    >
-      <div className="flex min-w-0 items-center gap-2 rounded-md hover:bg-red-500">
+    <div className="mx-2 flex items-center justify-between rounded-md bg-base-100 p-1.5">
+      <div
+        onClick={handleClick}
+        className="flex min-w-0 items-center gap-2 rounded-md hover:cursor-pointer hover:bg-red-500"
+      >
         <img
           className="w-10 rounded-md"
           src={`https://robohash.org/${authUser.display_username}`}

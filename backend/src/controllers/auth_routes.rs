@@ -107,24 +107,29 @@ pub async fn signup<'a>(
 
     // verify with https://docs.rs/argon2/latest/argon2/
 
-    let profile_picture = format!(
-        "https://avatar.iran.liara.run/public/boy?username={0}",
-        user.username
-    );
+    // let profile_picture = format!(
+    //     "https://avatar.iran.liara.run/public/boy?username={0}",
+    //     user.username
+    // );
 
     let user_response = sqlx::query_as!(
         models::User,
-        "INSERT INTO users (email, username, display_username, hashed_password, profile_picture)
-        VALUES ($1, $2, $3, $4, $5) RETURNING user_id, display_username, profile_picture, date_joined",
+        "INSERT INTO users (email, username, display_username, hashed_password)
+        VALUES ($1, $2, $3, $4)
+        RETURNING user_id, display_username, s3_icon_key, date_joined",
         user.email,
         user.username.to_lowercase(),
         user.username,
         password_hash,
-        profile_picture,
     )
     .fetch_one(&mut **db)
     .await
-    .map_err(|_| (Status::InternalServerError, json_error("Database insertion failed")))?;
+    .map_err(|_| {
+        (
+            Status::InternalServerError,
+            json_error("Database insertion failed"),
+        )
+    })?;
 
     let cookie = generate_token::jwt_cookie(user_response.user_id);
     jar.add(cookie);
@@ -153,7 +158,7 @@ pub async fn login<'a>(
     let user_id = user_data.user_id;
     let display_username = user_data.display_username;
     let hashed_password = user_data.hashed_password;
-    let profile_picture = user_data.profile_picture;
+    let s3_icon_key = user_data.s3_icon_key;
     let date_joined = user_data.date_joined;
 
     // check password correct
@@ -176,7 +181,7 @@ pub async fn login<'a>(
     let response = Json(models::User {
         user_id,
         display_username,
-        profile_picture,
+        s3_icon_key,
         date_joined,
     });
 
