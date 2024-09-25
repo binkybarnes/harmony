@@ -3,9 +3,6 @@ import MessagesSkeleton from "../skeletons/MessagesSkeleton/MessagesSkeleton";
 import Message from "./Message";
 import useServer from "../../zustand/useServer";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import useGetUsers from "../../hooks/useGetUsers";
-import { formatTime } from "../../utils/formatTime";
-import useListenMessages from "../../hooks/websocketListeners/useListenMessages";
 import { usePopupContext } from "../popups/PopupContext";
 
 const Messages = () => {
@@ -27,8 +24,6 @@ const Messages = () => {
       setUsers(fetchedUsers);
     }
   }, [fetchedMessages, fetchedUsers, setMessages, setUsers]);
-
-  useListenMessages();
 
   // const usersMap = useMemo(
   //   () =>

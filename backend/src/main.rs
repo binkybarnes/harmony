@@ -1,6 +1,6 @@
 use aws_sdk_s3::Client;
 use middleware::cors;
-use models::{new_server_sessionid_map, new_sessionid_websocket_map};
+use models::{new_server_sessionid_map, new_sessionid_websocket_map, new_user_sessionid_map};
 use rocket_db_pools::Database;
 use utils::error_catchers::not_authorized;
 
@@ -29,6 +29,7 @@ async fn rocket() -> _ {
     let _ = dotenv::dotenv().ok();
     let websocket_map = new_sessionid_websocket_map();
     let server_map = new_server_sessionid_map();
+    let user_map = new_user_sessionid_map();
 
     let config = aws_config::load_from_env().await;
     let aws_client = Client::new(&config);
@@ -41,6 +42,7 @@ async fn rocket() -> _ {
         .attach(cors::Cors)
         .manage(websocket_map)
         .manage(server_map)
+        .manage(user_map)
         .manage(aws_client)
         .register("/", catchers![not_authorized])
         .mount("/", routes![index])

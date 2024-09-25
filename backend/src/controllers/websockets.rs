@@ -3,6 +3,7 @@ use crate::middleware::protect_route::JwtGuard;
 use crate::models::ErrorResponse;
 use crate::models::Server;
 use crate::models::ServerType;
+use crate::models::UserSessionIdMap;
 use crate::models::{ServerSessionIdMap, SessionIdWebsocketMap};
 use crate::utils::json_error::json_error;
 use rocket::http::Status;
@@ -23,11 +24,13 @@ pub async fn websocket_handler(
     user_id: i32,
     websocket_map_state: &rocket::State<SessionIdWebsocketMap>,
     server_map_state: &rocket::State<ServerSessionIdMap>,
+    user_map_state: &rocket::State<UserSessionIdMap>,
     mut db: Connection<HarmonyDb>,
 ) -> Channel<'static> {
     let session_id = Uuid::new_v4();
     let websocket_map_state = websocket_map_state.inner().clone();
-    let server_map_state = server_map_state.inner().clone();
+    let server_map_state = server_map_state.0.clone();
+    let user_map_state = user_map_state.0.clone();
 
     let servers = get_all_servers(user_id, &mut db).await.unwrap();
 
@@ -54,6 +57,15 @@ pub async fn websocket_handler(
                     vec.push(session_id);
                 }
             }
+            // add session_id to user bucket
+            {
+                let mut user_map = user_map_state.lock().await;
+                let entry = user_map
+                    .entry(user_id)
+                    .or_insert_with(|| Arc::new(Mutex::new(Vec::new())));
+                let mut vec = entry.lock().await;
+                vec.push(session_id);
+            }
 
             // TODO:  what the sigma is this for?
             // Process incoming messages
@@ -79,11 +91,36 @@ pub async fn websocket_handler(
                 }
                 // remove session_id from server map
                 {
-                    let server_map = server_map_state.lock().await;
                     for server in servers.iter() {
-                        if let Some(arc_mutex_vec) = server_map.get(&server.server_id) {
+                        let arc_mutex_vec = {
+                            let server_map = server_map_state.lock().await;
+                            server_map.get(&user_id).cloned()
+                        };
+                        if let Some(arc_mutex_vec) = arc_mutex_vec {
                             let mut vec = arc_mutex_vec.lock().await;
                             vec.retain(|id| *id != session_id);
+
+                            if vec.is_empty() {
+                                let mut server_map = server_map_state.lock().await;
+                                server_map.remove(&server.server_id);
+                            }
+                        }
+                    }
+                }
+                // remove session_id from user map
+                {
+                    let arc_mutex_vec = {
+                        let user_map = user_map_state.lock().await;
+                        user_map.get(&user_id).cloned()
+                    };
+
+                    if let Some(arc_mutex_vec) = arc_mutex_vec {
+                        let mut vec = arc_mutex_vec.lock().await;
+                        vec.retain(|id| *id != session_id);
+
+                        if vec.is_empty() {
+                            let mut user_map = user_map_state.lock().await;
+                            user_map.remove(&user_id);
                         }
                     }
                 }
@@ -94,6 +131,37 @@ pub async fn websocket_handler(
     })
 }
 
+// add user_id's session_ids to the server websocket map
+pub async fn add_user_to_server_map(
+    user_id: i32,
+    server_id: i32,
+    server_map_state: &rocket::State<ServerSessionIdMap>,
+    user_map_state: &rocket::State<UserSessionIdMap>,
+) {
+    let server_map_state = server_map_state.0.clone();
+    let user_map_state = user_map_state.0.clone();
+
+    // add every session_id of user_id to the server map
+    {
+        let mut server_map = server_map_state.lock().await;
+        let mut user_map = user_map_state.lock().await;
+        let entry = user_map
+            .entry(user_id)
+            .or_insert_with(|| Arc::new(Mutex::new(Vec::new())));
+        let user_session_ids = entry.lock().await;
+        for user_session_id in user_session_ids.iter() {
+            let entry = server_map
+                .entry(server_id)
+                .or_insert_with(|| Arc::new(Mutex::new(Vec::new())));
+            let mut server_session_ids = entry.lock().await;
+            server_session_ids.push(*user_session_id);
+        }
+    }
+}
+
+// maybe? remove user_id's session_ids to the server websocket map
+
+// todo: move this somewhere else
 async fn get_all_servers(
     user_id: i32,
     db: &mut Connection<HarmonyDb>,

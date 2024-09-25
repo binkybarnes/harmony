@@ -1,6 +1,6 @@
 use crate::middleware::protect_route::JwtGuard;
 use crate::models::{ServerSessionIdMap, SessionIdWebsocketMap, WebSocketEvent};
-use crate::utils::broadcast_ws_message::broadcast_ws_message;
+use crate::utils::broadcast_ws_message::broadcast_to_server;
 use crate::{
     database,
     models::{self, ErrorResponse},
@@ -62,7 +62,7 @@ pub async fn send_message(
     })?;
 
     // broadcast message to everyone in the server
-    broadcast_ws_message(
+    broadcast_to_server(
         &message_json,
         server_id,
         websocket_map_state,

@@ -3,7 +3,9 @@ import useServer from "../../../zustand/useServer";
 import { useAuthContext } from "../../../context/AuthContext";
 
 // conversation is a Server that is type DM or GroupChat, and they have only 1 channel
-const Conversation = ({ users, server, channel }) => {
+const Conversation = ({ conversation }) => {
+  const { server, channel, users } = conversation;
+
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
   const selectedServer = useServer((state) => state.selectedServer);
@@ -41,24 +43,26 @@ const Conversation = ({ users, server, channel }) => {
 };
 
 Conversation.propTypes = {
-  users: PropTypes.arrayOf(
-    PropTypes.shape({
-      date_joined: PropTypes.string,
-      display_username: PropTypes.string,
-      profile_picture: PropTypes.string,
-      user_id: PropTypes.number,
+  conversation: PropTypes.shape({
+    users: PropTypes.arrayOf(
+      PropTypes.shape({
+        date_joined: PropTypes.string,
+        display_username: PropTypes.string,
+        profile_picture: PropTypes.string,
+        user_id: PropTypes.number,
+      }),
+    ),
+    server: PropTypes.shape({
+      server_id: PropTypes.number,
+      server_type: PropTypes.string,
+      members: PropTypes.number,
+      server_name: PropTypes.string,
     }),
-  ),
-  server: PropTypes.shape({
-    server_id: PropTypes.number,
-    server_type: PropTypes.string,
-    members: PropTypes.number,
-    server_name: PropTypes.string,
-  }),
-  channel: PropTypes.shape({
-    channel_id: PropTypes.number,
-    server_id: PropTypes.number,
-    channel_name: PropTypes.string,
+    channel: PropTypes.shape({
+      channel_id: PropTypes.number,
+      server_id: PropTypes.number,
+      channel_name: PropTypes.string,
+    }),
   }),
 };
 export default Conversation;

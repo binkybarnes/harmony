@@ -1,10 +1,10 @@
 use crate::middleware::protect_route::JwtGuard;
 use crate::models::{
     Channel, CreateChannelInput, CreateServerInput, EditServerInput, OptionalServerChannel, S3File,
-    Server, ServerChannel, ServerIds, ServerSessionIdMap, ServerType, SessionIdWebsocketMap, User,
-    UserJoin, WebSocketEvent,
+    Server, ServerChannel, ServerCreated, ServerIds, ServerSessionIdMap, ServerType,
+    SessionIdWebsocketMap, User, UserJoin, UserSessionIdMap, WebSocketEvent,
 };
-use crate::utils::broadcast_ws_message::broadcast_ws_message;
+use crate::utils::broadcast_ws_message::{broadcast_to_server, broadcast_to_users};
 use crate::utils::{
     json_error::json_error,
     user_membership::{ByChannel, ByServer, UserMembershipChecker},
@@ -23,6 +23,8 @@ use rocket::Error;
 use rocket::State;
 use rocket_db_pools::Connection;
 use validator::{Validate, ValidationErrors};
+
+use super::websockets::add_user_to_server_map;
 
 // get servers with server_type = sever for user for sidebar
 #[get("/get/<server_type>")]
@@ -184,6 +186,7 @@ pub async fn join_server(
     server_id: i32,
     websocket_map_state: &rocket::State<SessionIdWebsocketMap>,
     server_map_state: &rocket::State<ServerSessionIdMap>,
+    user_map_state: &rocket::State<UserSessionIdMap>,
     mut db: Connection<database::HarmonyDb>,
 ) -> Result<Json<models::Server>, (Status, Json<ErrorResponse>)> {
     let user_id = &guard.0.sub;
@@ -214,7 +217,14 @@ pub async fn join_server(
         return Err((Status::BadRequest, json_error("User already in server")));
     }
 
-    join_server_helper(*user_id, server_id, &mut db).await?;
+    join_server_helper(
+        *user_id,
+        server_id,
+        &mut db,
+        server_map_state,
+        user_map_state,
+    )
+    .await?;
 
     // broadcast user info to people online in the server (to update message map)
     let user = sqlx::query_as!(
@@ -235,7 +245,7 @@ pub async fn join_server(
             json_error("serialization error"),
         )
     })?;
-    broadcast_ws_message(&user_json, server_id, websocket_map_state, server_map_state).await;
+    broadcast_to_server(&user_json, server_id, websocket_map_state, server_map_state).await;
 
     Ok::<_, (Status, Json<ErrorResponse>)>(Json(server))
 }
@@ -311,6 +321,9 @@ pub async fn create_server(
     server_input: Form<CreateServerInput>,
     aws_client: &State<Client>,
     mut db: Connection<database::HarmonyDb>,
+    websocket_map_state: &rocket::State<SessionIdWebsocketMap>,
+    server_map_state: &rocket::State<ServerSessionIdMap>,
+    user_map_state: &rocket::State<UserSessionIdMap>,
 ) -> Result<Json<ServerChannel>, (Status, Json<ErrorResponse>)> {
     server_input
         .validate()
@@ -380,12 +393,38 @@ pub async fn create_server(
     )
     .await?;
     let server_id: i32 = server.server_id;
-    // make sender join server
-    join_server_helper(*user_id, server_id, &mut db).await?;
-    // make recipients join server
-    for recipient in recipient_ids.iter() {
-        join_server_helper(*recipient, server_id, &mut db).await?;
+
+    // make recipients + sender join server
+    let mut combined_ids = Vec::new();
+    combined_ids.extend(recipient_ids);
+    combined_ids.push(*user_id);
+
+    for id in combined_ids.iter() {
+        join_server_helper(*id, server_id, &mut db, server_map_state, user_map_state).await?;
     }
+
+    // broadcast server created websocket event
+    let users = get_users_helper(server_id, &mut db).await?;
+    let server_event = WebSocketEvent::ServerCreated(ServerCreated {
+        server: server.clone(),
+        channel: channel.clone(),
+        users,
+    });
+    let message_json = serde_json::to_string(&server_event).map_err(|_| {
+        (
+            Status::InternalServerError,
+            json_error("serialization error"),
+        )
+    })?;
+
+    // broadcast server created to recipients + sender
+    broadcast_to_users(
+        &message_json,
+        &combined_ids,
+        websocket_map_state,
+        user_map_state,
+    )
+    .await;
 
     Ok(Json(ServerChannel { server, channel }))
 }
@@ -593,6 +632,8 @@ async fn join_server_helper(
     user_id: i32,
     server_id: i32,
     db: &mut Connection<database::HarmonyDb>,
+    server_map_state: &rocket::State<ServerSessionIdMap>,
+    user_map_state: &rocket::State<UserSessionIdMap>,
 ) -> Result<(), (Status, Json<ErrorResponse>)> {
     // join server
     sqlx::query!(
@@ -621,6 +662,9 @@ async fn join_server_helper(
     .execute(&mut ***db)
     .await
     .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+
+    // add user_id's session_ids to the server websocket map
+    add_user_to_server_map(user_id, server_id, server_map_state, user_map_state).await;
 
     Ok(())
 }

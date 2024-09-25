@@ -58,6 +58,7 @@ const UserMenu = () => {
       await getDm(userMenu.user.user_id);
 
     if (existingServer && existingChannel) {
+      // uselistendm will add it to conversations state
       setSelectedServer(existingServer);
       setSelectedChannel(existingChannel);
     } else {
@@ -69,7 +70,7 @@ const UserMenu = () => {
         "Dm",
       );
       if (newServer) {
-        addConversation(newServer);
+        // server added in listen server created
         setSelectedServer(newServer);
         setSelectedChannel(newChannel);
       }

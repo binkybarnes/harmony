@@ -98,7 +98,7 @@ pub enum ServerType {
 }
 
 // for sqlx queries
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Server {
     pub server_id: i32,
     pub server_type: ServerType,
@@ -108,7 +108,7 @@ pub struct Server {
     pub s3_icon_key: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Channel {
     pub channel_id: i32,
     pub server_id: i32,
@@ -190,7 +190,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use ws::{stream::DuplexStream, Message as WsMessage};
 
-// maps channel_id to list of websocket send connections
+// maps session_id to list of websocket send connections
 pub type SessionIdWebsocketMap =
     Arc<Mutex<HashMap<Uuid, Arc<Mutex<SplitSink<DuplexStream, WsMessage>>>>>>;
 pub fn new_sessionid_websocket_map() -> SessionIdWebsocketMap {
@@ -198,9 +198,14 @@ pub fn new_sessionid_websocket_map() -> SessionIdWebsocketMap {
 }
 
 // map server_id to list of session_ids
-pub type ServerSessionIdMap = Arc<Mutex<HashMap<i32, Arc<Mutex<Vec<Uuid>>>>>>;
+pub struct ServerSessionIdMap(pub Arc<Mutex<HashMap<i32, Arc<Mutex<Vec<Uuid>>>>>>);
 pub fn new_server_sessionid_map() -> ServerSessionIdMap {
-    Arc::new(Mutex::new(HashMap::new()))
+    ServerSessionIdMap(Arc::new(Mutex::new(HashMap::new())))
+}
+// map user_id to list of session_ids
+pub struct UserSessionIdMap(pub Arc<Mutex<HashMap<i32, Arc<Mutex<Vec<Uuid>>>>>>);
+pub fn new_user_sessionid_map() -> UserSessionIdMap {
+    UserSessionIdMap(Arc::new(Mutex::new(HashMap::new())))
 }
 
 // websocket events
@@ -209,12 +214,20 @@ pub fn new_server_sessionid_map() -> ServerSessionIdMap {
 pub enum WebSocketEvent {
     Message(Message),
     UserJoin(UserJoin),
+    ServerCreated(ServerCreated),
 }
 
 #[derive(Serialize)]
 pub struct UserJoin {
     pub user: User,
     pub server_id: i32,
+}
+
+#[derive(Serialize)]
+pub struct ServerCreated {
+    pub server: Server,
+    pub channel: Channel,
+    pub users: Vec<User>,
 }
 
 // #[derive(Deserialize)]

@@ -8,7 +8,7 @@ const useListenMessages = () => {
   const addMessage = useServer((state) => state.addMessage);
   const selectedChannel = useServer((state) => state.selectedChannel);
   useEffect(() => {
-    if (!websocket) return;
+    if (!websocket || !selectedChannel) return;
     const handleIncomingMessage = (event) => {
       try {
         const ws_event = JSON.parse(event.data);
@@ -28,7 +28,7 @@ const useListenMessages = () => {
     return () => {
       websocket.removeEventListener("message", handleIncomingMessage);
     };
-  }, [websocket, addMessage, selectedChannel.channel_id]);
+  }, [websocket, addMessage, selectedChannel]);
 };
 
 export default useListenMessages;

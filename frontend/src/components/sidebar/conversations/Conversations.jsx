@@ -3,7 +3,6 @@ import Conversation from "./Conversation";
 import toast from "react-hot-toast";
 import { useEffect, useMemo, useState } from "react";
 import useConversationInfo from "../../../hooks/useConversationInfo";
-import { useWebsocketContext } from "../../../context/WebsocketContext";
 import useServer from "../../../zustand/useServer";
 
 // TODO: START CACHEING EVERYTHING
@@ -13,33 +12,35 @@ const Conversations = () => {
 
   const conversations = useServer((state) => state.conversations);
   const setConversations = useServer((state) => state.setConversations);
+
   // TODO: put groupchats in here
   // TODO: handle the server name in the backend?
-  const { loading, servers, usersList, channelsList } =
+  const { loading, conversations: fetchedConversations } =
     useConversationInfo("Dm");
 
-  useEffect(() => setConversations(servers), [servers, setConversations]);
+  useEffect(
+    () => setConversations(fetchedConversations),
+    [fetchedConversations, setConversations],
+  );
 
   const mapDmConversations = useMemo(() => {
-    if (!conversations || !channelsList || !usersList) {
+    if (!conversations) {
       return null;
     }
-    return usersList.map((users, i) => {
-      if (users.length != 2) {
+    return conversations.map((conversation) => {
+      if (conversation.users.length != 2) {
         toast.error("DM servers should have only 2 members");
         return null;
       }
 
       return (
         <Conversation
-          key={conversations[i].server_id}
-          users={users}
-          server={conversations[i]}
-          channel={channelsList[i][0]}
+          key={conversation.server.server_id}
+          conversation={conversation}
         />
       );
     });
-  }, [usersList, channelsList, conversations]);
+  }, [conversations]);
 
   return (
     <nav className="scrollbar-sidebar visible-on-hover flex-1 overflow-y-scroll pl-2">

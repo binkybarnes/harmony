@@ -24,6 +24,7 @@ const useServer = create((set) => ({
       servers: state.servers.filter((server) => server.server_id !== server_id),
     })),
 
+  // {server, channel, users}
   conversations: [],
   setConversations: (conversations) => set({ conversations }),
   addConversation: (newConversation) =>

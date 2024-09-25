@@ -13,7 +13,6 @@ const CreateServerMenu = () => {
   const menuRef = useRef(null);
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
-  const addServer = useServer((state) => state.addServer);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
   const { createServer } = useCreateServer();
   const { serverMenu, setServerMenuVisible, setModalOverlayVisible } =
@@ -72,7 +71,7 @@ const CreateServerMenu = () => {
         "Server",
       );
       if (newServer) {
-        addServer(newServer);
+        // server added in listen server created
         setSelectedServer(newServer);
         setSelectedChannel(newChannel);
       }

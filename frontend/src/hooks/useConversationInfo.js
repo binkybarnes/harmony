@@ -8,9 +8,8 @@ import toast from "react-hot-toast";
 // returns server list, userslist (list of users in each server), and channelsList
 const useConversationInfo = (serverType) => {
   const [loading, setLoading] = useState(false);
-  const [servers, setServers] = useState([]);
-  const [usersList, setUsersList] = useState([]);
-  const [channelsList, setChannelsList] = useState([]);
+  // {server, channel, users}
+  const [conversations, setConversations] = useState([]);
 
   const fetchServers = useCallback(async () => {
     try {
@@ -68,28 +67,31 @@ const useConversationInfo = (serverType) => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const serversData = await fetchServers();
-      if (!serversData) {
+      const servers = await fetchServers();
+      if (!servers) {
         setLoading(false);
         return;
       }
-      setServers(serversData);
-      const serverIds = serversData.map((server) => server.server_id);
 
-      const [channelsData, usersData] = await Promise.all([
+      const serverIds = servers.map((server) => server.server_id);
+
+      const [channelsList, usersList] = await Promise.all([
         fetchChannels(serverIds),
         fetchUsers(serverIds),
       ]);
 
-      setChannelsList(channelsData);
-      setUsersList(usersData);
+      setConversations(servers.map((server, index) => ({
+        server,
+        channel: channelsList[index][0],
+        users: usersList[index]
+      })))
       setLoading(false);
     };
 
     fetchData();
   }, [fetchServers]);
 
-  return { loading, servers, usersList, channelsList };
+  return { loading, conversations };
 };
 
 export default useConversationInfo;

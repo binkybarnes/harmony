@@ -14,9 +14,13 @@ import CreateServerMenu from "../../components/popups/createServer/CreateServerM
 import { Navigate, Route, Routes, Router } from "react-router-dom";
 import ServerSettingsMenu from "../../components/popups/serverSettings/ServerSettingsMenu";
 import UserMenu from "../../components/popups/userMenu/UserMenu";
+import useListenServerCreated from "../../hooks/websocketListeners/useListenServerCreated";
+import useListenMessages from "../../hooks/websocketListeners/useListenMessages";
 
 const Home = () => {
   const selectedServer = useServer((state) => state.selectedServer);
+  useListenServerCreated();
+  useListenMessages();
   return (
     <div className="flex overflow-hidden">
       <PopupProvider>
