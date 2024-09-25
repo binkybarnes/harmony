@@ -14,7 +14,7 @@ const useEditUser = () => {
         formData.append("user_icon", user_icon);
       }
 
-      const res = await fetch(`/api/servers/edit/${user_id}`, {
+      const res = await fetch("/api/users/edit", {
         method: "PATCH",
         body: formData,
       });

@@ -15,13 +15,20 @@ import useEditUser from "../../../hooks/useEditUser";
 const UserMenu = () => {
   const menuRef = useRef(null);
   const { userMenu, setUserMenu, setModalOverlayVisible } = usePopupContext();
-  const { authUser, setAuthUser } = useAuthContext();
+  const { authUser, setLocalStorageAuthUser } = useAuthContext();
   const { createServer } = useCreateServer();
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
 
-  const { icon, previewUrl, iconChanged, handleFileChange } = useImageUpload();
+  const {
+    icon,
+    previewUrl,
+    iconChanged,
+    handleFileChange,
+    setPreviewUrl,
+    setIcon,
+  } = useImageUpload();
   const { editUser } = useEditUser();
   const isSelf = userMenu.user.user_id === authUser.user_id;
 
@@ -90,7 +97,7 @@ const UserMenu = () => {
     } else {
       const newUser = await editUser(userMenu.user_id, icon);
       if (newUser) {
-        setAuthUser(newUser);
+        setLocalStorageAuthUser(newUser);
       }
       onClose();
     }
@@ -105,6 +112,8 @@ const UserMenu = () => {
       unmountOnExit
       onEntering={() => {
         setButtonsDisabled(true);
+        setPreviewUrl(null);
+        setIcon(null);
       }}
       onEntered={() => setButtonsDisabled(false)}
       onExiting={() => setButtonsDisabled(true)}
