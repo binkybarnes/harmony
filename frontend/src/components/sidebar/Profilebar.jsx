@@ -11,15 +11,25 @@ const Profilebar = () => {
     setUserMenu({ visible: true, user: authUser });
   };
   return (
-    <div className="mx-2 flex items-center justify-between rounded-md bg-base-100 p-1.5">
+    <div className="text-content-header flex items-center justify-between bg-base-300 p-1">
       <div
         onClick={handleClick}
-        className="flex min-w-0 items-center gap-2 rounded-md hover:cursor-pointer hover:bg-red-500"
+        className="hover:bg-base-50 flex min-w-0 items-center gap-2 rounded-md p-1 hover:cursor-pointer"
       >
-        <img
-          className="w-10 rounded-md"
-          src={`https://robohash.org/${authUser.display_username}`}
-        />
+        <div className="group relative h-10 w-10 overflow-hidden rounded-md bg-cyan-700">
+          {authUser.s3_icon_key ? (
+            <img
+              draggable={false}
+              className="h-10 w-10"
+              src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/user-icons/${authUser.s3_icon_key}`}
+            />
+          ) : (
+            <img
+              className="h-10 w-10"
+              src={`https://robohash.org/${authUser.display_username}`}
+            />
+          )}
+        </div>
 
         <p className="mr-1 truncate font-medium">{authUser.display_username}</p>
       </div>

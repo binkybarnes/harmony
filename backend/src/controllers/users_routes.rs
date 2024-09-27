@@ -30,6 +30,7 @@ pub async fn edit_user(
     if let Some(user_icon) = user_icon {
         upload_to_s3(
             aws_client,
+            "user-icons",
             &user_icon.key,
             ByteStream::from(user_icon.data.value.clone()),
         )
@@ -66,7 +67,7 @@ pub async fn edit_user(
 
         // if there was a previous icon, remove it from s3
         if let Some(old_icon_key) = old_icon_key {
-            remove_from_s3(aws_client, &old_icon_key)
+            remove_from_s3(aws_client, "user-icons", &old_icon_key)
                 .await
                 .map_err(|_| {
                     (

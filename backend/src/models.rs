@@ -131,7 +131,8 @@ pub struct S3File {
 #[rocket::async_trait]
 impl<'r> FromFormField<'r> for S3File {
     async fn from_data(field: DataField<'r, '_>) -> form::Result<'r, Self> {
-        let file_name = format!("server-profile-pictures/{}", Uuid::new_v4());
+        // will need to add folder in front of the name
+        let file_name = format!("{}", Uuid::new_v4());
         let bytes = field.data.open(1.mebibytes()).into_bytes().await?;
 
         Ok(S3File {

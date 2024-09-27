@@ -2,9 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import useSearchServers from "../../hooks/useSearchServers";
+import useServersPopular from "../../hooks/useGetPopularServers";
+import PropTypes from "prop-types";
 
 const SearchServersName = ({ setServers }) => {
   const [searchName, setSearchName] = useState(true);
+  const { serversPopular } = useServersPopular();
   const inputRef = useRef(null);
   const handleClick = () => {
     setSearchName((prev) => !prev);
@@ -20,10 +23,13 @@ const SearchServersName = ({ setServers }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!searchTerm) return;
+    if (!searchTerm) {
+      setServers(await serversPopular());
+      return;
+    }
     if (searchName) {
       setServers(await searchServers("name", searchTerm));
-    } else {
+    } else if (typeof searchTerm === "number") {
       setServers(await searchServers("id", searchTerm));
     }
   };
@@ -42,10 +48,10 @@ const SearchServersName = ({ setServers }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex h-10 items-center overflow-hidden rounded-md bg-neutral-700 pr-2">
+      <div className="bg-base-400 flex h-10 items-center overflow-hidden rounded-md pr-2">
         <RiArrowDropDownLine
           onClick={handleClick}
-          className="flex-shrink-0 hover:cursor-pointer"
+          className="text-button flex-shrink-0 hover:cursor-pointer"
           size={32}
         />
         <input
@@ -54,7 +60,7 @@ const SearchServersName = ({ setServers }) => {
           onChange={handleInputChange}
           value={searchTerm}
           placeholder={`Search server ${searchName ? "name" : "ID"}...`}
-          className="h-full flex-1 bg-neutral-700"
+          className="text-content-normal h-full flex-1 bg-transparent"
         />
         <IoSearchOutline className="flex-shrink-0" size={20} />
       </div>
@@ -62,4 +68,7 @@ const SearchServersName = ({ setServers }) => {
   );
 };
 
+SearchServersName.propTypes = {
+  setServer: PropTypes.func,
+};
 export default SearchServersName;

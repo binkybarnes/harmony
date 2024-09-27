@@ -173,10 +173,15 @@ const CreateServerMenu = () => {
       <div className="absolute left-0 top-0 flex h-screen w-screen items-center justify-center">
         <form onSubmit={handleSubmit} ref={menuRef}>
           <fieldset disabled={buttonsDisabled}>
-            <div className="w-[460px] rounded-md bg-green-200 p-4">
+            <div className="w-[460px] rounded-md bg-base-100 p-4">
               <div className="mb-4 flex items-center justify-between">
-                <h1 className="text-xl font-medium">Create Server</h1>
-                <button onClick={onClose} className="hover:text-green-500">
+                <h1 className="text-content-header text-xl font-bold">
+                  Create Server
+                </h1>
+                <button
+                  onClick={onClose}
+                  className="text-button hover:text-content-normal"
+                >
                   <IoIosClose className="flex-shrink-0" size={40} />
                 </button>
               </div>
@@ -201,8 +206,10 @@ const CreateServerMenu = () => {
                 </div>
               </div>
               <div className="mb-8">
-                <h2 className="mb-2 text-xs font-bold">SERVER NAME</h2>
-                <div className="h-10 rounded-md bg-base-100 pl-2">
+                <h2 className="text-button mb-2 text-xs font-bold">
+                  SERVER NAME
+                </h2>
+                <div className="bg-base-400 text-content-normal h-10 rounded-md pl-2">
                   <input
                     onKeyDown={handleInputKeyDown}
                     ref={inputRef}
@@ -217,13 +224,13 @@ const CreateServerMenu = () => {
               <div className="flex justify-end gap-2">
                 <button
                   onClick={onClose}
-                  className="h-9 rounded-md px-4 hover:underline"
+                  className="text-button h-9 rounded-md px-4 hover:underline"
                 >
                   Cancel
                 </button>
                 <button
                   disabled={!serverName || serverName.length > 30}
-                  className={`h-9 rounded-md ${!serverName || serverName.length > 30 ? "cursor-not-allowed bg-red-500 text-yellow-500" : "bg-cyan-400 text-lime-400"} px-4`}
+                  className={`text-content-normal h-9 rounded-md ${!serverName || serverName.length > 30 ? "cursor-not-allowed bg-error" : "bg-primary"} px-4`}
                 >
                   Create Server
                 </button>

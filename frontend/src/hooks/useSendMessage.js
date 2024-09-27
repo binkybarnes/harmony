@@ -7,7 +7,7 @@ const useSendMessage = () => {
   const selectedChannel = useServer((state) => state.selectedChannel);
   const selectedServer = useServer((state) => state.selectedServer);
 
-  const sendMessage = async (message, display_username, profile_picture) => {
+  const sendMessage = async (message, display_username, s3_icon_key) => {
     setLoading(true);
     try {
       const res = await fetch(`/api/messages/send`, {
@@ -20,7 +20,7 @@ const useSendMessage = () => {
           server_id: selectedServer.server_id,
           message,
           display_username,
-          profile_picture,
+          s3_icon_key,
         }),
       });
       const data = await res.json();

@@ -5,6 +5,10 @@ const useServer = create((set) => ({
   setSelectedServer: (selectedServer) => set({ selectedServer }),
   selectedChannel: null,
   setSelectedChannel: (selectedChannel) => set({ selectedChannel }),
+  // i need this so the stupid toolbar can use the other user as the channel name
+  selectedConversation: null,
+  setSelectedConversation: (selectedConversation) =>
+    set({ selectedConversation }),
 
   messages: [],
   setMessages: (messages) => set({ messages }),

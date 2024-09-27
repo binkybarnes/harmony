@@ -23,8 +23,8 @@ const CreateChannelButton = () => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
-      className="hover:text-yellow-400 active:text-cyan-300"
-      size={24}
+      className="hover:text-content-normal active:text-cyan-300"
+      size={20}
     />
   );
 };

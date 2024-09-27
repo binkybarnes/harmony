@@ -8,9 +8,9 @@ const DropdownItem = ({ text, icon, color = "white", handleClick }) => {
   const colorStyle = {
     color: isHovered ? "white" : color,
     backgroundColor: isHovered
-      ? color === "red"
-        ? "red"
-        : "magenta"
+      ? color === "#f23f42"
+        ? "#f23f42"
+        : "#f2a358"
       : "transparent",
   };
   return (

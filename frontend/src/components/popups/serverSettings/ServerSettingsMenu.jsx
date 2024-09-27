@@ -218,7 +218,7 @@ const ServerSettingsMenu = () => {
                       src={
                         previewUrl
                           ? previewUrl
-                          : `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${selectedServer?.s3_icon_key}`
+                          : `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/server-icons/${selectedServer?.s3_icon_key}`
                       }
                     />
                   ) : (

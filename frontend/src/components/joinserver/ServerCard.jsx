@@ -26,21 +26,21 @@ const ServerCard = ({ server }) => {
     <button
       disabled={loading}
       onClick={handleClick}
-      className="server-card flex w-48 flex-col overflow-hidden rounded-md bg-red-500 hover:cursor-pointer"
+      className="server-card flex w-48 flex-col overflow-hidden rounded-md bg-base-300 hover:cursor-pointer"
     >
-      <div className="bg-cyan-700">
+      <div className="bg-primary">
         {server.s3_icon_key ? (
           <img
             draggable={false}
             className="h-48 w-48"
-            src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${server.s3_icon_key}`}
+            src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/server-icons/${server.s3_icon_key}`}
           />
         ) : (
           <div
             style={{
               fontSize: `clamp(2.5rem, ${16 / serverNameAbbrev.length}rem, 4rem)`,
             }}
-            className="flex h-48 w-48 items-center justify-center text-white"
+            className="text-content-normal flex h-48 w-48 items-center justify-center"
           >
             {serverNameAbbrev}
           </div>
@@ -48,17 +48,17 @@ const ServerCard = ({ server }) => {
       </div>
 
       <div className="w-full px-2 py-1">
-        <h3 className="truncate text-left font-semibold text-neutral-200">
+        <h3 className="text-content-normal truncate text-left font-semibold">
           {server.server_name}
         </h3>
-        <div className="flex items-center justify-between text-xs text-neutral-200">
+        <div className="text-content-normal flex items-center justify-between text-xs">
           <div className="flex items-center gap-1">
-            <div className="h-[8px] w-[8px] rounded-full bg-white"></div>
+            <div className="bg-content-normal h-[8px] w-[8px] rounded-full"></div>
             <p>{server.members} Members</p>
           </div>
           <p>
             <span className="select-none">ID: </span>
-            <span className="rounded-md bg-red-900 px-1 py-0.5">
+            <span className="bg-base-50 rounded-md px-1 py-0.5">
               {server.server_id}
             </span>
           </p>

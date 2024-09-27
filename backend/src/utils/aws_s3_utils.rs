@@ -3,6 +3,7 @@ use aws_sdk_s3::Client;
 
 pub async fn upload_to_s3(
     aws_client: &Client,
+    folder: &str,
     key: &str,
     byte_stream: ByteStream,
 ) -> Result<(), aws_sdk_s3::Error> {
@@ -14,7 +15,7 @@ pub async fn upload_to_s3(
     aws_client
         .put_object()
         .bucket(s3_bucket)
-        .key(key)
+        .key(format!("{}/{}", folder, key))
         .body(byte_stream)
         .send()
         .await?;
@@ -22,7 +23,11 @@ pub async fn upload_to_s3(
     Ok(())
 }
 
-pub async fn remove_from_s3(aws_client: &Client, key: &str) -> Result<(), aws_sdk_s3::Error> {
+pub async fn remove_from_s3(
+    aws_client: &Client,
+    folder: &str,
+    key: &str,
+) -> Result<(), aws_sdk_s3::Error> {
     let s3_bucket: String = dotenv::var("S3_IMAGE_BUCKET")
         .expect("set S3_IMAGE_BUCKET in .env")
         .parse::<String>()
@@ -31,7 +36,7 @@ pub async fn remove_from_s3(aws_client: &Client, key: &str) -> Result<(), aws_sd
     aws_client
         .delete_object()
         .bucket(s3_bucket)
-        .key(key)
+        .key(format!("{}/{}", folder, key))
         .send()
         .await?;
 

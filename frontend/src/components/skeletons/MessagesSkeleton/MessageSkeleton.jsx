@@ -4,10 +4,10 @@ const MessageSkeleton = ({ numBlobs }) => {
   return (
     <div className="relative mt-4 rounded-md pl-16">
       <div className="absolute left-4 select-none">
-        <div className="h-10 w-10 rounded-md bg-gray-500 object-contain"></div>
+        <div className="bg-content-muted-100 h-10 w-10 rounded-md object-contain"></div>
       </div>
       <h3 className="h-5">
-        <div className="message-skeleton w-32 bg-gray-500"></div>
+        <div className="message-skeleton bg-content-muted-100 w-32"></div>
       </h3>
 
       <div className="h-5">

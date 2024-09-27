@@ -377,6 +377,7 @@ pub async fn create_server(
     if let Some(server_icon) = &server_input.server_icon {
         upload_to_s3(
             aws_client,
+            "server-icons",
             &server_icon.key,
             ByteStream::from(server_icon.data.value.clone()),
         )
@@ -452,6 +453,7 @@ pub async fn edit_server(
     if let Some(server_icon) = server_icon {
         upload_to_s3(
             aws_client,
+            "server-icons",
             &server_icon.key,
             ByteStream::from(server_icon.data.value.clone()),
         )
@@ -473,7 +475,7 @@ pub async fn edit_server(
 
         // if there was a previous icon, remove it from s3
         if let Some(old_icon_key) = old_icon_key {
-            remove_from_s3(aws_client, &old_icon_key)
+            remove_from_s3(aws_client, "server-icons", &old_icon_key)
                 .await
                 .map_err(|_| {
                     (

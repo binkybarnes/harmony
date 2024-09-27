@@ -21,7 +21,7 @@ const MessageInput = () => {
       await sendMessage(
         message,
         authUser.display_username,
-        authUser.profile_picture,
+        authUser.s3_icon_key,
       );
       setMessage("");
     }
@@ -58,11 +58,11 @@ const MessageInput = () => {
   }, [popupActive]);
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit}>
-      <div className="scrollbar-sidebar mb-6 flex max-h-[50vh] w-full select-none overflow-y-scroll rounded-md bg-green-400 pl-2 text-neutral-200">
+    <form ref={formRef} className="px-2" onSubmit={handleSubmit}>
+      <div className="scrollbar-sidebar bg-base-50 mb-6 flex max-h-[50vh] w-full select-none overflow-y-scroll rounded-md pl-2">
         <div className="flex flex-1">
           <textarea
-            className="w-full resize-none bg-red-500 py-[11px] leading-[1.375rem] outline-none"
+            className="text-content-normal w-full resize-none bg-transparent py-[11px] leading-[1.375rem] outline-none"
             rows={1}
             ref={textareaRef}
             value={message}
@@ -79,9 +79,9 @@ const MessageInput = () => {
           onChange={(e) => setMessage(e.target.value)}
         /> */}
 
-        <div className="sticky top-0 flex h-[44px] items-center pl-2">
+        <div className="text-button sticky top-0 flex h-[44px] items-center pl-2">
           <button type="submit">
-            <div className="flex h-[36px] w-[36px] items-center justify-center bg-purple-500 transition-transform duration-75 hover:text-red-400 active:translate-y-[1.5px]">
+            <div className="flex h-[36px] w-[36px] items-center justify-center transition-transform duration-75 hover:text-red-400 active:translate-y-[1.5px]">
               <IoSend size={"20px"} />
             </div>
           </button>

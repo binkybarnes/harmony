@@ -8,7 +8,7 @@ const Sidebar = () => {
   const selectedServer = useServer((state) => state.selectedServer);
 
   return (
-    <div className="flex h-screen w-60 shrink-0 select-none flex-col gap-3 bg-lime-300 py-2">
+    <div className="flex h-screen w-60 shrink-0 select-none flex-col gap-3 bg-base-200">
       {selectedServer?.server_type === "Server" ? (
         <>
           <ServerHeader />

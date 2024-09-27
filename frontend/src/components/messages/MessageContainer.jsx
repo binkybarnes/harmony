@@ -7,8 +7,8 @@ const MessageContainer = () => {
   const selectedChannel = useServer((state) => state.selectedChannel);
 
   return (
-    <div className="flex h-screen flex-1 flex-col gap-3 bg-blue-500 px-2">
-      {!selectedServer || !selectedChannel ? null : (
+    <div className="flex h-screen flex-1 flex-col gap-3 bg-base-100">
+      {!selectedChannel || !selectedServer ? null : (
         <>
           <Toolbar />
           <Messages />

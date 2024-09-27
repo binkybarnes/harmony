@@ -78,7 +78,7 @@ const ServerDropdown = () => {
         <DropdownItem
           icon={<FaUserFriends className="flex-shrink-0" size="20px" />}
           text="Invite People"
-          color="magenta"
+          color="#f2a358"
         />
         {isAdmin ? (
           <DropdownItem
@@ -89,19 +89,19 @@ const ServerDropdown = () => {
           />
         ) : null}
 
-        <div className="my-1 min-h-[2px] w-full rounded-[1px] bg-yellow-400"></div>
+        <div className="my-1 w-full rounded-[1px] border-b border-solid border-base-100"></div>
         {isAdmin ? (
           <DropdownItem
             icon={<FaTrashAlt className="flex-shrink-0" size="20px" />}
             text="Delete Server"
-            color="red"
+            color="#f23f42"
             handleClick={handleDeleteClick}
           />
         ) : (
           <DropdownItem
             icon={<VscSignOut className="flex-shrink-0" size="20px" />}
             text="Leave Server"
-            color="red"
+            color="#f23f42"
             handleClick={handleLeaveClick}
           />
         )}

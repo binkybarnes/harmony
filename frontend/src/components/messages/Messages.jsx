@@ -13,7 +13,6 @@ const Messages = () => {
   } = useGetMessages();
 
   const messages = useServer((state) => state.messages);
-  const users = useServer((state) => state.users);
   const setMessages = useServer((state) => state.setMessages);
   const setUsers = useServer((state) => state.setUsers);
   useEffect(() => {
@@ -57,7 +56,7 @@ const Messages = () => {
   const { setUserMenu, setModalOverlayVisible } = usePopupContext();
 
   const handleClick = useCallback(
-    (event, user_id, display_username, profile_picture) => {
+    (event, user_id, display_username, s3_icon_key) => {
       event.stopPropagation();
       setModalOverlayVisible(true);
       setUserMenu({
@@ -65,7 +64,7 @@ const Messages = () => {
         user: {
           user_id,
           display_username,
-          profile_picture,
+          s3_icon_key,
         },
       });
     },
@@ -84,7 +83,7 @@ const Messages = () => {
                 event,
                 message.user_id,
                 message.display_username,
-                message.profile_picture,
+                message.s3_icon_key,
               )
             }
           />
@@ -105,8 +104,8 @@ const Messages = () => {
   };
 
   return (
-    <div className="scrollbar-messages flex flex-1 flex-col overflow-x-auto overflow-y-scroll rounded-md bg-cyan-400">
-      <div className="flex-1 bg-cyan-300"></div>
+    <div className="scrollbar-messages flex flex-1 flex-col overflow-x-auto overflow-y-scroll rounded-md bg-base-100 px-2">
+      <div className="flex-1"></div>
       {loading ? <MessagesSkeleton /> : mapMessages}
 
       <div ref={messagesEndRef} className="min-h-4 w-[1px]"></div>

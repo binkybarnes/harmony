@@ -74,6 +74,7 @@ const useImageUpload = () => {
     icon,
     previewUrl,
     iconChanged,
+    setIconChanged,
     handleFileChange,
     setPreviewUrl,
     setIcon,

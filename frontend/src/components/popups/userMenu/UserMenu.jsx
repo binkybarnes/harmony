@@ -25,6 +25,7 @@ const UserMenu = () => {
     icon,
     previewUrl,
     iconChanged,
+    setIconChanged,
     handleFileChange,
     setPreviewUrl,
     setIcon,
@@ -35,9 +36,10 @@ const UserMenu = () => {
   const { getDm } = useGetDm();
 
   const onClose = useCallback(() => {
-    setUserMenu({ visible: false, user: {} });
+    setUserMenu((prev) => ({ ...prev, visible: false }));
+    setIconChanged(false);
     setModalOverlayVisible(false);
-  }, [setUserMenu, setModalOverlayVisible]);
+  }, [setUserMenu, setModalOverlayVisible, setIconChanged]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -121,9 +123,9 @@ const UserMenu = () => {
       <div className="absolute left-0 top-0 flex h-screen w-screen items-center justify-center">
         <form onSubmit={handleSubmit} ref={menuRef}>
           <fieldset disabled={buttonsDisabled}>
-            <div className="w-[460px] rounded-md bg-green-200 p-4">
+            <div className="w-[460px] rounded-md bg-black p-4">
               <div className="flex justify-between">
-                <h1 className="text-2xl font-bold text-white">
+                <h1 className="text-content-header text-2xl font-bold">
                   {userMenu.user.display_username}
                 </h1>
                 <button onClick={onClose} className="hover:text-green-500">
@@ -140,28 +142,30 @@ const UserMenu = () => {
                       src={
                         previewUrl
                           ? previewUrl
-                          : `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${userMenu.user.s3_icon_key}`
+                          : `https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/user-icons/${userMenu.user.s3_icon_key}`
                       }
                     />
                   ) : (
-                    <div className="h-[144px] w-[144px] overflow-hidden rounded-md bg-red-500">
-                      <img
-                        className="h-[144px] w-[144px]"
-                        src={`https://robohash.org/${userMenu.user.display_name}`}
-                      />
-                    </div>
+                    <img
+                      className="h-[144px] w-[144px]"
+                      src={`https://robohash.org/${userMenu.user.display_username}`}
+                    />
                   )}
 
-                  <input
-                    onChange={handleFileChange}
-                    style={{ fontSize: "0px" }}
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.gif,.webp"
-                    className="absolute left-0 top-0 h-full w-full opacity-0 hover:cursor-pointer"
-                  />
-                  <div className="pointer-events-none invisible absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-xs font-bold text-white group-hover:visible">
-                    CHANGE ICON
-                  </div>
+                  {isSelf ? (
+                    <>
+                      <input
+                        onChange={handleFileChange}
+                        style={{ fontSize: "0px" }}
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.gif,.webp"
+                        className="absolute left-0 top-0 h-full w-full opacity-0 hover:cursor-pointer"
+                      />
+                      <div className="pointer-events-none invisible absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-xs font-bold text-white group-hover:visible">
+                        CHANGE ICON
+                      </div>
+                    </>
+                  ) : null}
                 </div>
 
                 {!isSelf ? (
@@ -181,13 +185,13 @@ const UserMenu = () => {
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={onClose}
-                    className="h-9 rounded-md px-4 hover:underline"
+                    className="text-button h-9 rounded-md px-4 hover:underline"
                   >
                     Cancel
                   </button>
                   <button
                     disabled={!iconChanged}
-                    className={`h-9 rounded-md ${!iconChanged ? "cursor-not-allowed bg-red-500 text-yellow-500" : "bg-cyan-400 text-lime-400"} px-4`}
+                    className={`text-content-normal h-9 rounded-md ${!iconChanged ? "cursor-not-allowed bg-red-500" : "bg-primary"} px-4`}
                   >
                     Save Changes
                   </button>

@@ -5,6 +5,9 @@ import { useMemo } from "react";
 
 const Server = ({ server }) => {
   const { handleServerHover } = usePopupContext();
+  const setSelectedConversation = useServer(
+    (state) => state.setSelectedConversation,
+  );
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
   const selectedServer = useServer((state) => state.selectedServer);
@@ -32,6 +35,7 @@ const Server = ({ server }) => {
   };
 
   const handleClick = () => {
+    setSelectedConversation(null);
     setSelectedServer(server);
     // TODO: CHANGE TO LAST VISITED CHANNEL?
     setSelectedChannel(null);
@@ -47,22 +51,22 @@ const Server = ({ server }) => {
       <div
         className={`overflow-hidden ${
           selectedServer?.server_id === server.server_id
-            ? "rounded-[1.2rem] bg-green-700"
-            : "rounded-md bg-cyan-700"
-        } transition-all duration-100 hover:bg-green-700 group-hover:cursor-pointer group-hover:rounded-[1.2rem] group-active:translate-y-[1.5px]`}
+            ? "rounded-[1.2rem] bg-primary"
+            : "rounded-md bg-base-100"
+        } transition-all duration-100 hover:bg-primary group-hover:cursor-pointer group-hover:rounded-[1.2rem] group-active:translate-y-[1.5px]`}
       >
         {server.s3_icon_key ? (
           <img
             draggable={false}
             className="h-[48px] w-[48px]"
-            src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/${server.s3_icon_key}`}
+            src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/server-icons/${server.s3_icon_key}`}
           />
         ) : (
           <div
             style={{
               fontSize: `clamp(0.625rem, ${4 / serverNameAbbrev.length}rem, 1rem)`,
             }}
-            className="flex h-[48px] w-[48px] items-center justify-center text-white"
+            className="text-content-normal flex h-[48px] w-[48px] items-center justify-center"
           >
             {serverNameAbbrev}
           </div>
