@@ -27,33 +27,43 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center overflow-hidden bg-neutral">
+    <div className="flex h-screen items-center justify-center overflow-hidden bg-base-200">
       <form
         onSubmit={handleSubmit}
-        className="w-[480px] select-none rounded-md bg-neutral-800 p-8 text-center text-neutral-200"
+        className="w-[480px] select-none rounded-md bg-base-100 p-8 text-center"
       >
-        <h1 className="text-2xl font-semibold">Create an account</h1>
+        <h1 className="text-2xl font-semibold text-content-header">
+          Create an account
+        </h1>
         <div className="text-left">
-          <Field handleOnChange={handleOnChange} name="email" header="EMAIL" />
+          <Field
+            handleOnChange={handleOnChange}
+            name="email"
+            header="EMAIL"
+            type="text"
+          />
           <Field
             handleOnChange={handleOnChange}
             name="username"
             header="USERNAME"
+            type="text"
           />
           <Field
             handleOnChange={handleOnChange}
             name="password"
             header="PASSWORD"
+            type="password"
           />
           <Field
             handleOnChange={handleOnChange}
             name="confirm_password"
             header="CONFIRM PASSWORD"
+            type="password"
           />
 
           <button
             disabled={loading}
-            className="mt-12 h-10 w-full rounded-md bg-neutral-700 font-semibold hover:brightness-95 active:brightness-90"
+            className="mt-12 h-10 w-full rounded-md bg-primary font-semibold text-white hover:brightness-95 active:brightness-90"
           >
             {loading ? <span className="loading loading-spinner" /> : "Signup"}
           </button>

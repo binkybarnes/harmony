@@ -9,9 +9,13 @@ const useJoinServer = () => {
   const joinServer = async (server_id) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/servers/join/${server_id}`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/join/${server_id}`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       addServer(data);

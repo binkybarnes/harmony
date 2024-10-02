@@ -17,7 +17,9 @@ pub async fn broadcast_to_server(
         if let Some(arc_mutex_vec) = server_map.get(&server_id) {
             let senders_session_id = arc_mutex_vec.lock().await;
             for sender_session_id in senders_session_id.iter() {
+                println!("USFHFOIJDSFOIJS");
                 if let Some(sender_arc_mutex) = websocket_map.get(sender_session_id) {
+                    println!("bruh");
                     let mut sender = sender_arc_mutex.lock().await;
                     if let Err(e) = sender.send(message.into()).await {
                         eprintln!("Error sending message: {:?}", e);

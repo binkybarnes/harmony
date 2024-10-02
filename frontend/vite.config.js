@@ -1,13 +1,24 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 3000,
-    proxy: {
-      "/api": { target: "http://127.0.0.1:5000" },
+export default defineConfig(({ command, mode }) => {
+  // const env = loadEnv(mode, process.cwd(), "");
+
+  return {
+    plugins: [react()],
+    server: {
+      port: 3000,
+      // proxy: {
+      //   "/api": {
+      //     target: "http://127.0.0.1:5500/", //env.API_URL
+      //     secure: false,
+      //   },
+      //   "/ws": {
+      //     target: "ws://127.0.0.1:5500/", //env.API_URL
+      //     secure: false,
+      //   },
+      // },
     },
-  },
+  };
 });

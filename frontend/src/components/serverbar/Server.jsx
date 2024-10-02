@@ -14,16 +14,16 @@ const Server = ({ server }) => {
 
   const serverName = server.server_name;
 
-  const serverNameAbbrev = useMemo(
-    () =>
-      serverName
+  const serverNameAbbrev = useMemo(() => {
+    if (serverName) {
+      return serverName
         .trim()
         .split(/([^a-zA-Z0-9]+)/)
         .filter((char) => char.match(/\S/))
         .map((word) => word[0])
-        .join(""),
-    [serverName],
-  );
+        .join("");
+    }
+  }, [serverName]);
 
   const handleMouseEnter = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -66,7 +66,7 @@ const Server = ({ server }) => {
             style={{
               fontSize: `clamp(0.625rem, ${4 / serverNameAbbrev.length}rem, 1rem)`,
             }}
-            className="text-content-normal flex h-[48px] w-[48px] items-center justify-center"
+            className="flex h-[48px] w-[48px] items-center justify-center font-medium text-content-normal"
           >
             {serverNameAbbrev}
           </div>

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE servers\n        SET members = members - 1\n        WHERE server_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e121d7c71287ca9eed4d695d3cd8aaecd1ee223b6ca7fbdadaa48238ab860de5"
+}

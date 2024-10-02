@@ -4,7 +4,6 @@ import useServer from "../../zustand/useServer";
 import toast from "react-hot-toast";
 
 const useListenServerCreated = () => {
-  
   const { websocket } = useWebsocketContext();
   const addConversation = useServer((state) => state.addConversation);
   const addServer = useServer((state) => state.addServer);
@@ -18,15 +17,11 @@ const useListenServerCreated = () => {
 
           const server_type = ws_event.data.server.server_type;
           if (server_type === "Dm" || server_type === "GroupChat") {
-
-          addConversation(ws_event.data);
+            addConversation(ws_event.data);
+          } else if (server_type === "Server") {
+            addServer(ws_event.data.server);
           }
-          else if (server_type === "Server") {
-            addServer(ws_event.data);
-          }
-          
         }
-    
       } catch (error) {
         toast.error(error.message);
       }

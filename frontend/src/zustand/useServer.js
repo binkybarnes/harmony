@@ -30,7 +30,14 @@ const useServer = create((set) => ({
 
   // {server, channel, users}
   conversations: [],
-  setConversations: (conversations) => set({ conversations }),
+  setConversations: (conversations) =>
+    set({
+      conversations: conversations.sort((a, b) => {
+        const dateA = new Date(a.server.last_message_at);
+        const dateB = new Date(b.server.last_message_at);
+        return dateB.valueOf() - dateA.valueOf(); // Sort in descending order (most recent first)
+      }),
+    }),
   addConversation: (newConversation) =>
     set((state) => ({
       conversations: [newConversation, ...state.conversations],

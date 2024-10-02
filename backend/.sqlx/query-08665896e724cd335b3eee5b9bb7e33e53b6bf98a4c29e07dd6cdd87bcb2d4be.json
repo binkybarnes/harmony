@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n        s.server_id, s.server_type AS \"server_type!: ServerType\", s.members, s.server_name, s.admins, s.s3_icon_key\n        FROM servers s\n        JOIN users_servers us1 ON s.server_id = us1.server_id\n        JOIN users_servers us2 ON s.server_id = us2.server_id\n        WHERE s.server_type = 'dm'\n        AND us1.user_id = $1\n        AND us2.user_id = $2\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "server_type!: ServerType",
+        "type_info": {
+          "Custom": {
+            "name": "server_type",
+            "kind": {
+              "Enum": [
+                "dm",
+                "groupchat",
+                "server"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "members",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "server_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "admins",
+        "type_info": "Int4Array"
+      },
+      {
+        "ordinal": 5,
+        "name": "s3_icon_key",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "08665896e724cd335b3eee5b9bb7e33e53b6bf98a4c29e07dd6cdd87bcb2d4be"
+}

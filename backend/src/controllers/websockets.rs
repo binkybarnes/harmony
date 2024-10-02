@@ -1,5 +1,5 @@
 use crate::database::HarmonyDb;
-use crate::middleware::protect_route::JwtGuard;
+use crate::models::print_server_sessionid_map;
 use crate::models::ErrorResponse;
 use crate::models::Server;
 use crate::models::ServerType;
@@ -8,13 +8,11 @@ use crate::models::{ServerSessionIdMap, SessionIdWebsocketMap};
 use crate::utils::json_error::json_error;
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::{futures::StreamExt, get, routes};
+use rocket::{futures::StreamExt, get};
 use rocket_db_pools::Connection;
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
-use ws::stream::DuplexStream;
 use ws::{Channel, WebSocket};
 
 // the name channel_id is referring to the channels in my servers, not the rocket channel
@@ -83,7 +81,7 @@ pub async fn websocket_handler(
 
                 // Handle disconnection
                 println!("User disconnected");
-
+                // print_server_sessionid_map(server_map_state.clone()).await;
                 // Remove session_id from websocket map
                 {
                     let mut websocket_map = websocket_map_state.lock().await;
@@ -94,8 +92,9 @@ pub async fn websocket_handler(
                     for server in servers.iter() {
                         let arc_mutex_vec = {
                             let server_map = server_map_state.lock().await;
-                            server_map.get(&user_id).cloned()
+                            server_map.get(&server.server_id).cloned()
                         };
+
                         if let Some(arc_mutex_vec) = arc_mutex_vec {
                             let mut vec = arc_mutex_vec.lock().await;
                             vec.retain(|id| *id != session_id);
@@ -117,13 +116,14 @@ pub async fn websocket_handler(
                     if let Some(arc_mutex_vec) = arc_mutex_vec {
                         let mut vec = arc_mutex_vec.lock().await;
                         vec.retain(|id| *id != session_id);
-
                         if vec.is_empty() {
                             let mut user_map = user_map_state.lock().await;
                             user_map.remove(&user_id);
                         }
                     }
                 }
+                // println!("\n\n");
+                // print_server_sessionid_map(server_map_state.clone()).await;
             });
 
             Ok(())
@@ -169,7 +169,7 @@ async fn get_all_servers(
     let servers = sqlx::query_as!(
         Server,
         r#"SELECT 
-        s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
+        s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
         FROM servers s
         JOIN users_servers us ON us.server_id = s.server_id
         WHERE us.user_id = $1"#,

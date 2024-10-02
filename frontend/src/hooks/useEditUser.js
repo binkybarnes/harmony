@@ -14,10 +14,14 @@ const useEditUser = () => {
         formData.append("user_icon", user_icon);
       }
 
-      const res = await fetch("/api/users/edit", {
-        method: "PATCH",
-        body: formData,
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/users/edit`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          body: formData,
+        },
+      );
 
       const data = await res.json();
       if (!res.ok) {

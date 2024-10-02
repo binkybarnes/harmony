@@ -2,14 +2,11 @@ use crate::database;
 use crate::models;
 
 use crate::utils::{generate_token, json_error::json_error};
-use rocket::http::{Cookie, CookieJar, Status};
-use rocket::serde::{json::Json, Deserialize, Serialize};
-use rocket::{
-    response::{self, status::Created, Debug, Responder},
-    Request,
-};
+use rocket::http::{CookieJar, Status};
+use rocket::response::Responder;
+use rocket::serde::json::Json;
 use rocket_db_pools::Connection;
-use validator::{Validate, ValidationErrors};
+use validator::Validate;
 
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},

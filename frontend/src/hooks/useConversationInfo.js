@@ -13,7 +13,12 @@ const useConversationInfo = (serverType) => {
 
   const fetchServers = useCallback(async () => {
     try {
-      const res = await fetch(`/api/servers/get/${serverType}`);
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/get/${serverType}`,
+        {
+          credentials: "include",
+        },
+      );
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error);
@@ -26,13 +31,17 @@ const useConversationInfo = (serverType) => {
   }, [serverType]);
   const fetchChannels = async (server_ids) => {
     try {
-      const res = await fetch("/api/servers/channels-list", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          server_ids,
-        }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/channels-list`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server_ids,
+          }),
+        },
+      );
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error);
@@ -46,13 +55,17 @@ const useConversationInfo = (serverType) => {
 
   const fetchUsers = async (server_ids) => {
     try {
-      const res = await fetch("/api/servers/users-list", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          server_ids,
-        }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/users-list`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server_ids,
+          }),
+        },
+      );
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error);
@@ -80,11 +93,13 @@ const useConversationInfo = (serverType) => {
         fetchUsers(serverIds),
       ]);
 
-      setConversations(servers.map((server, index) => ({
-        server,
-        channel: channelsList[index][0],
-        users: usersList[index]
-      })))
+      setConversations(
+        servers.map((server, index) => ({
+          server,
+          channel: channelsList[index][0],
+          users: usersList[index],
+        })),
+      );
       setLoading(false);
     };
 

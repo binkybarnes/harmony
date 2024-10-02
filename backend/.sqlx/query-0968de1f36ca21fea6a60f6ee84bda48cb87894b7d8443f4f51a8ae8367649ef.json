@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.user_id, display_username, s3_icon_key, date_joined\n        FROM users u\n        JOIN users_servers us ON u.user_id = us.user_id\n        WHERE us.server_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "s3_icon_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "date_joined",
+        "type_info": "Date"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "0968de1f36ca21fea6a60f6ee84bda48cb87894b7d8443f4f51a8ae8367649ef"
+}

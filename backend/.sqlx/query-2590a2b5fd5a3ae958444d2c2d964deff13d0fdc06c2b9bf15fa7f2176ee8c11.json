@@ -1,0 +1,61 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT server_id, server_type AS \"server_type!: ServerType\", members, server_name, admins, s3_icon_key\n        FROM SERVERS\n        WHERE server_type = 'server'\n        ORDER BY members DESC\n        LIMIT 50",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "server_type!: ServerType",
+        "type_info": {
+          "Custom": {
+            "name": "server_type",
+            "kind": {
+              "Enum": [
+                "dm",
+                "groupchat",
+                "server"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "members",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "server_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "admins",
+        "type_info": "Int4Array"
+      },
+      {
+        "ordinal": 5,
+        "name": "s3_icon_key",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "2590a2b5fd5a3ae958444d2c2d964deff13d0fdc06c2b9bf15fa7f2176ee8c11"
+}

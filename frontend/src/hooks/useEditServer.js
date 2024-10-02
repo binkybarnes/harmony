@@ -17,10 +17,14 @@ const useEditServer = () => {
         formData.append("server_icon", server_icon);
       }
 
-      const res = await fetch(`/api/servers/edit/${server_id}`, {
-        method: "PATCH",
-        body: formData,
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/edit/${server_id}`,
+        {
+          method: "PATCH",
+          body: formData,
+          credentials: "include",
+        },
+      );
 
       const data = await res.json();
       if (!res.ok) {

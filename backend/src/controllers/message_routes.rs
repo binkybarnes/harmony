@@ -1,21 +1,20 @@
 use crate::middleware::protect_route::JwtGuard;
-use crate::models::{ServerSessionIdMap, SessionIdWebsocketMap, WebSocketEvent};
+use crate::models::{
+    MessageWithServer, ServerSessionIdMap, ServerType, SessionIdWebsocketMap, WebSocketEvent,
+};
 use crate::utils::broadcast_ws_message::broadcast_to_server;
 use crate::{
     database,
     models::{self, ErrorResponse},
     utils::{self, json_error::json_error},
 };
-use argon2::password_hash::rand_core::Error;
 
-use rocket::futures::SinkExt;
 use rocket::http::Status;
-use rocket::response::status;
-use rocket::response::Responder;
-use rocket::serde::{json::Json, Deserialize, Serialize};
+
+use rocket::serde::json::Json;
 
 use rocket_db_pools::Connection;
-use utils::user_membership::{ByChannel, ByServer, UserMembershipChecker};
+use utils::user_membership::{ByChannel, UserMembershipChecker};
 
 #[post("/send", format = "json", data = "<message_json>")]
 pub async fn send_message(
@@ -28,6 +27,7 @@ pub async fn send_message(
     let user_id = &guard.0.sub;
     let channel_id = message_json.channel_id;
     let server_id = message_json.server_id;
+    let server_type = message_json.server_type;
     let message = &message_json.message;
 
     let display_username = &message_json.display_username;
@@ -37,6 +37,7 @@ pub async fn send_message(
     let channel_checker = ByChannel { channel_id };
     channel_checker.user_in_server(&mut db, *user_id).await?;
 
+    // !TODO: maybe restrict to only dms and groupchats
     let message = sqlx::query_as!(
         models::Message,
         "INSERT INTO messages (user_id, channel_id, message, display_username, s3_icon_key)
@@ -52,7 +53,27 @@ pub async fn send_message(
     .await
     .map_err(|_| (Status::BadRequest, json_error("database error")))?;
 
-    let event = WebSocketEvent::Message(message.clone());
+    match server_type {
+        ServerType::Dm | ServerType::GroupChat => {
+            sqlx::query!(
+                "UPDATE servers
+                SET last_message_at = $1
+                WHERE server_id = $2",
+                message.timestamp,
+                server_id
+            )
+            .execute(&mut **db)
+            .await
+            .map_err(|_| (Status::BadRequest, json_error("database error")))?;
+        }
+        ServerType::Server => {}
+    };
+
+    let event = WebSocketEvent::Message(MessageWithServer {
+        message: message.clone(),
+        server_type,
+        server_id,
+    });
     // turn to json string
     let message_json = serde_json::to_string(&event).map_err(|_| {
         (

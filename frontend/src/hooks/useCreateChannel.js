@@ -8,14 +8,18 @@ const useCreateChannel = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/servers/channels/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          server_id,
-          channel_name,
-        }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/channels/create`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server_id,
+            channel_name,
+          }),
+        },
+      );
 
       const data = await res.json();
       if (!res.ok) {

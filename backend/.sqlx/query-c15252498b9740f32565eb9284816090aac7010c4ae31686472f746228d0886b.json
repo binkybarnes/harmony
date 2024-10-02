@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM channels\n        WHERE server_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "channel_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "server_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "channel_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c15252498b9740f32565eb9284816090aac7010c4ae31686472f746228d0886b"
+}

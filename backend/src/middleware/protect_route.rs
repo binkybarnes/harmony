@@ -1,11 +1,7 @@
-use crate::models::{self, ErrorResponse};
-use crate::utils::json_error::json_error;
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use rocket::fairing::{Fairing, Info, Kind};
+use crate::models::{self};
+use jsonwebtoken::{decode, DecodingKey, Validation};
 use rocket::http::Status;
-use rocket::request::{self, FromRequest, Outcome, Request};
-use rocket::serde::json::Json;
-use sqlx::query;
+use rocket::request::{FromRequest, Outcome, Request};
 pub struct JwtGuard(pub models::Claims);
 
 #[rocket::async_trait]

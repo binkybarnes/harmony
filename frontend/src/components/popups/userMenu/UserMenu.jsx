@@ -125,7 +125,7 @@ const UserMenu = () => {
           <fieldset disabled={buttonsDisabled}>
             <div className="w-[460px] rounded-md bg-black p-4">
               <div className="flex justify-between">
-                <h1 className="text-content-header text-2xl font-bold">
+                <h1 className="text-2xl font-bold text-content-header">
                   {userMenu.user.display_username}
                 </h1>
                 <button onClick={onClose} className="hover:text-green-500">
@@ -134,7 +134,7 @@ const UserMenu = () => {
               </div>
 
               <div className="justify-apart flex justify-between">
-                <div className="group relative h-[144px] w-[144px] overflow-hidden rounded-md bg-cyan-700">
+                <div className="group relative h-[144px] w-[144px] overflow-hidden rounded-md bg-primary">
                   {userMenu.user?.s3_icon_key || previewUrl ? (
                     <img
                       draggable={false}
@@ -171,7 +171,7 @@ const UserMenu = () => {
                 {!isSelf ? (
                   <button
                     onClick={handleMessageClick}
-                    className="self-end rounded-md bg-red-500 px-2 py-1.5 text-white hover:bg-yellow-500"
+                    className="self-end rounded-md bg-primary px-2 py-1.5 text-white hover:brightness-110"
                   >
                     <div className="flex items-center gap-2">
                       <RiMessage3Line size="20px" />
@@ -185,13 +185,13 @@ const UserMenu = () => {
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={onClose}
-                    className="text-button h-9 rounded-md px-4 hover:underline"
+                    className="h-9 rounded-md px-4 text-button hover:underline"
                   >
                     Cancel
                   </button>
                   <button
                     disabled={!iconChanged}
-                    className={`text-content-normal h-9 rounded-md ${!iconChanged ? "cursor-not-allowed bg-red-500" : "bg-primary"} px-4`}
+                    className={`h-9 rounded-md text-content-normal ${!iconChanged ? "cursor-not-allowed bg-red-500" : "bg-primary"} px-4`}
                   >
                     Save Changes
                   </button>

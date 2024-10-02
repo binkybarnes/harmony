@@ -11,13 +11,13 @@ const useSearchServers = () => {
       let url = "";
       switch (searchType) {
         case "name":
-          url = `/api/servers/searchName?name=${term}`;
+          url = `${import.meta.env.VITE_API_URL}/api/servers/searchName?name=${term}`;
           break;
         case "id":
-          url = `/api/servers/searchId?id=${term}`;
+          url = `${import.meta.env.VITE_API_URL}/api/servers/searchId?id=${term}`;
           break;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       return data;

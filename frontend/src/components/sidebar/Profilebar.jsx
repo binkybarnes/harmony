@@ -11,12 +11,12 @@ const Profilebar = () => {
     setUserMenu({ visible: true, user: authUser });
   };
   return (
-    <div className="text-content-header flex items-center justify-between bg-base-300 p-1">
+    <div className="flex items-center justify-between bg-base-300 p-1 text-content-header">
       <div
         onClick={handleClick}
-        className="hover:bg-base-50 flex min-w-0 items-center gap-2 rounded-md p-1 hover:cursor-pointer"
+        className="flex min-w-0 items-center gap-2 rounded-md p-1 hover:cursor-pointer hover:bg-base-50"
       >
-        <div className="group relative h-10 w-10 overflow-hidden rounded-md bg-cyan-700">
+        <div className="group relative h-10 w-10 overflow-hidden rounded-md bg-primary">
           {authUser.s3_icon_key ? (
             <img
               draggable={false}

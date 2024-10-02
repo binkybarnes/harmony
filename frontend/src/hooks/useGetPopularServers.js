@@ -8,7 +8,10 @@ const useServersPopular = () => {
   const serversPopular = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/servers/popular");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/popular`,
+        { credentials: "include" },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       return data;

@@ -10,7 +10,10 @@ const useGetServers = (serverType) => {
     const getServers = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/servers/get/${serverType}`);
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/servers/get/${serverType}`,
+          { credentials: "include" },
+        );
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
         setServers(data);

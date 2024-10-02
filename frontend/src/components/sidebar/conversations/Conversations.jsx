@@ -28,6 +28,8 @@ const Conversations = () => {
     [fetchedConversations, setConversations],
   );
 
+  console.log(conversations);
+
   const handleConversationClick = useCallback(
     (conversation) => {
       setSelectedConversation(conversation);
@@ -61,7 +63,7 @@ const Conversations = () => {
 
   return (
     <nav className="scrollbar-sidebar visible-on-hover flex-1 overflow-y-scroll pl-2">
-      <h2 className="text-content-muted-100 px-1.5 pt-2 text-xs font-semibold">
+      <h2 className="px-1.5 pt-2 text-xs font-semibold text-content-muted-100">
         DIRECT MESSAGES
       </h2>
       {loading ? (

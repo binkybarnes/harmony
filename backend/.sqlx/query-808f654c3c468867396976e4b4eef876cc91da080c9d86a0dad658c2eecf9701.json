@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO public.servers (server_type, members, server_name, admins, s3_icon_key)\n        VALUES ($1, 0, $2, ARRAY[$3]::integer[], $4) \n        RETURNING server_id, server_type AS \"server_type!: ServerType\", members, server_name, admins, s3_icon_key",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "server_type!: ServerType",
+        "type_info": {
+          "Custom": {
+            "name": "server_type",
+            "kind": {
+              "Enum": [
+                "dm",
+                "groupchat",
+                "server"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "members",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "server_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "admins",
+        "type_info": "Int4Array"
+      },
+      {
+        "ordinal": 5,
+        "name": "s3_icon_key",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "server_type",
+            "kind": {
+              "Enum": [
+                "dm",
+                "groupchat",
+                "server"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "808f654c3c468867396976e4b4eef876cc91da080c9d86a0dad658c2eecf9701"
+}

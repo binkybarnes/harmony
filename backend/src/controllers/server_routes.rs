@@ -1,15 +1,12 @@
 use crate::middleware::protect_route::JwtGuard;
 use crate::models::{
-    Channel, CreateChannelInput, CreateServerInput, EditServerInput, OptionalServerChannel, S3File,
-    Server, ServerChannel, ServerCreated, ServerIds, ServerSessionIdMap, ServerType,
-    SessionIdWebsocketMap, User, UserJoin, UserSessionIdMap, WebSocketEvent,
+    Channel, CreateChannelInput, CreateServerInput, EditServerInput, OptionalServerChannel, Server,
+    ServerChannel, ServerCreated, ServerIds, ServerSessionIdMap, ServerType, SessionIdWebsocketMap,
+    User, UserJoin, UserSessionIdMap, WebSocketEvent,
 };
 use crate::utils::aws_s3_utils::{remove_from_s3, upload_to_s3};
 use crate::utils::broadcast_ws_message::{broadcast_to_server, broadcast_to_users};
-use crate::utils::{
-    json_error::json_error,
-    user_membership::{ByChannel, ByServer, UserMembershipChecker},
-};
+use crate::utils::json_error::json_error;
 use crate::{
     database,
     models::{self, ErrorResponse},
@@ -19,11 +16,10 @@ use aws_sdk_s3::Client;
 use rocket::form::Form;
 use rocket::http::Status;
 use rocket::response::Responder;
-use rocket::serde::{json::Json, Deserialize, Serialize};
-use rocket::Error;
+use rocket::serde::json::Json;
 use rocket::State;
 use rocket_db_pools::Connection;
-use validator::{Validate, ValidationErrors};
+use validator::Validate;
 
 use super::websockets::add_user_to_server_map;
 
@@ -48,7 +44,7 @@ pub async fn get_servers(
     let servers = sqlx::query_as!(
         models::Server,
         r#"SELECT 
-        s.server_id, s.server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
+        s.server_id, s.server_type AS "server_type!: ServerType", s.members, s.server_name, s.admins, s.s3_icon_key, s.last_message_at
         FROM servers s
         JOIN users_servers us ON us.server_id = s.server_id
         WHERE us.user_id = $1 AND s.server_type = $2
@@ -76,7 +72,7 @@ pub async fn get_dm(
         Server,
         r#"
         SELECT
-        s.server_id, s.server_type AS "server_type!: ServerType", s.members, s.server_name, s.admins, s.s3_icon_key
+        s.server_id, s.server_type AS "server_type!: ServerType", s.members, s.server_name, s.admins, s.s3_icon_key, s.last_message_at
         FROM servers s
         JOIN users_servers us1 ON s.server_id = us1.server_id
         JOIN users_servers us2 ON s.server_id = us2.server_id
@@ -124,7 +120,7 @@ pub async fn search_servers_name(
     let servers = sqlx::query_as!(
         Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
         FROM servers
         WHERE server_type = 'server' AND server_name % $1
         ORDER BY (SIMILARITY(server_name, 'skibidi') * 0.3 + LOG(members + 1) * 0.7) DESC
@@ -148,7 +144,7 @@ pub async fn search_servers_id(
     let servers = sqlx::query_as!(
         Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
         FROM servers
         WHERE server_type = 'server' AND server_id = $1"#,
         id
@@ -168,7 +164,7 @@ pub async fn get_servers_popular(
     let servers = sqlx::query_as!(
         Server,
         r#"
-        SELECT server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
+        SELECT server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
         FROM SERVERS
         WHERE server_type = 'server'
         ORDER BY members DESC
@@ -195,7 +191,7 @@ pub async fn join_server(
     let server = sqlx::query_as!(
         models::Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
         FROM servers WHERE server_id = $1"#,
         server_id
     )
@@ -527,7 +523,7 @@ pub async fn edit_server(
     let server = sqlx::query_as!(
         Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
         FROM servers
         WHERE server_id = $1
         "#,
@@ -584,7 +580,7 @@ async fn create_server_helper(
         models::Server,
         r#"INSERT INTO public.servers (server_type, members, server_name, admins, s3_icon_key)
         VALUES ($1, 0, $2, ARRAY[$3]::integer[], $4) 
-        RETURNING server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key"#,
+        RETURNING server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at"#,
         server_type as ServerType,
         server_name,
         user_id,

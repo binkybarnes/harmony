@@ -24,10 +24,14 @@ const useCreateServer = () => {
         formData.append("server_icon", server_icon);
       }
 
-      const res = await fetch("/api/servers/create", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/create`,
+        {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        },
+      );
 
       const data = await res.json();
       if (!res.ok) {

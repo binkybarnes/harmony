@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE messages\n            SET s3_icon_key = $1\n            WHERE user_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f71a363c6ffdc7d4d1b462c6c221a0f1e860219cd89d6b2327c6ea77a2a2c15e"
+}

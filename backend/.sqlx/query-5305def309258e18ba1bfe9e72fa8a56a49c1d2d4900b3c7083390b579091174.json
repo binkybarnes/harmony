@@ -1,0 +1,63 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n        server_id, server_type AS \"server_type!: ServerType\", members, server_name, admins, s3_icon_key\n        FROM servers\n        WHERE server_type = 'server' AND server_name % $1\n        ORDER BY (SIMILARITY(server_name, 'skibidi') * 0.3 + LOG(members + 1) * 0.7) DESC\n        LIMIT 100",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "server_type!: ServerType",
+        "type_info": {
+          "Custom": {
+            "name": "server_type",
+            "kind": {
+              "Enum": [
+                "dm",
+                "groupchat",
+                "server"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "members",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "server_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "admins",
+        "type_info": "Int4Array"
+      },
+      {
+        "ordinal": 5,
+        "name": "s3_icon_key",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "5305def309258e18ba1bfe9e72fa8a56a49c1d2d4900b3c7083390b579091174"
+}

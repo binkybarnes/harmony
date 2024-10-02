@@ -1,4 +1,4 @@
-use rocket::{serde::json::Json, Request};
+use rocket::serde::json::Json;
 
 use crate::models::ErrorResponse;
 

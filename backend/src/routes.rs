@@ -1,10 +1,10 @@
-use crate::controllers::{self, websockets};
+use crate::controllers::{self};
 
 use rocket::{Build, Rocket};
 
 pub fn build() -> Rocket<Build> {
     let port: u16 = dotenv::var("ROCKET_PORT")
-        .expect("set PORT in .env")
+        .expect("set ROCKET_PORT in .env")
         .parse::<u16>()
         .unwrap();
 

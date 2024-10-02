@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO users (email, username, display_username, hashed_password)\n        VALUES ($1, $2, $3, $4)\n        RETURNING user_id, display_username, s3_icon_key, date_joined",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "s3_icon_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "date_joined",
+        "type_info": "Date"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "46c5513101896ffa92b90bb707fa3e48ac8b57200021f6a1a9553e24e40b3165"
+}

@@ -1,14 +1,12 @@
 use crate::database::HarmonyDb;
 use crate::middleware::protect_route::JwtGuard;
-use crate::models::{EditUserInput, ErrorResponse, Server, ServerIds, User};
+use crate::models::{EditUserInput, ErrorResponse, User};
 use crate::utils::aws_s3_utils::{remove_from_s3, upload_to_s3};
 use crate::utils::json_error::json_error;
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client;
 use rocket::form::Form;
-use rocket::http::uri::Query;
 use rocket::http::Status;
-use rocket::response::Responder;
 use rocket::serde::json::Json;
 use rocket::State;
 use rocket_db_pools::Connection;

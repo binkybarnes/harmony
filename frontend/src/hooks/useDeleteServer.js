@@ -9,9 +9,13 @@ const useDeleteServer = () => {
   const deleteServer = async (server_id) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/servers/delete/${server_id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/delete/${server_id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
       if (!res.ok) throw new Error((await res.json()).error);
       removeServer(server_id);
     } catch (error) {

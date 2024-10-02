@@ -1,15 +1,12 @@
-use aws_sdk_s3::presigning::PresigningConfig;
-use aws_sdk_s3::primitives::ByteStream;
 // use rocket::serde::{json::Json, Deserialize, Serialize};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use rocket::data::{Capped, ToByteUnit};
-use rocket::form::{self, DataField, Form, FromFormField};
-use rocket::fs::TempFile;
+use rocket::form::{self, DataField, FromFormField};
 use rocket::serde::{Deserialize, Serialize};
 
 use uuid::Uuid;
-use validator::{Validate, ValidationError};
+use validator::Validate;
 
 use chrono::{DateTime, NaiveDate, Utc};
 
@@ -63,15 +60,16 @@ pub struct Claims {
 pub struct SendMessageInput {
     pub channel_id: i32,
     pub server_id: i32,
+    pub server_type: ServerType,
     pub message: String,
     pub display_username: String,
     pub s3_icon_key: Option<String>,
 }
 
-#[derive(Deserialize)]
-pub struct GetMessagesInput {
-    pub channel_id: i32,
-}
+// #[derive(Deserialize)]
+// pub struct GetMessagesInput {
+//     pub channel_id: i32,
+// }
 
 #[derive(Serialize, Clone)]
 pub struct Message {
@@ -82,6 +80,12 @@ pub struct Message {
     pub timestamp: DateTime<Utc>,
     pub display_username: String,
     pub s3_icon_key: Option<String>,
+}
+#[derive(Serialize, Clone)]
+pub struct MessageWithServer {
+    pub message: Message,
+    pub server_type: ServerType,
+    pub server_id: i32,
 }
 
 // #[derive(Deserialize)]
@@ -106,6 +110,7 @@ pub struct Server {
     pub server_name: String,
     pub admins: Vec<i32>,
     pub s3_icon_key: Option<String>,
+    pub last_message_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Serialize, Clone)]
@@ -208,6 +213,28 @@ pub struct ServerSessionIdMap(pub Arc<Mutex<HashMap<i32, Arc<Mutex<Vec<Uuid>>>>>
 pub fn new_server_sessionid_map() -> ServerSessionIdMap {
     ServerSessionIdMap(Arc::new(Mutex::new(HashMap::new())))
 }
+// Function to print the map
+pub async fn print_server_sessionid_map(
+    map: Arc<tokio::sync::Mutex<HashMap<i32, Arc<tokio::sync::Mutex<Vec<uuid::Uuid>>>>>>,
+) {
+    // Lock the outer Arc<Mutex<HashMap<...>>>
+    let server_map = map.lock().await;
+
+    for (server_id, session_ids_arc) in server_map.iter() {
+        // Lock the inner Arc<Mutex<Vec<Uuid>>>
+        let session_ids = session_ids_arc.lock().await;
+
+        // Print the server ID
+        println!("Server ID: {}", server_id);
+
+        // Print the session IDs for the server
+        println!("Session IDs:");
+        for session_id in session_ids.iter() {
+            println!(" - {}", session_id);
+        }
+    }
+}
+
 // map user_id to list of session_ids
 pub struct UserSessionIdMap(pub Arc<Mutex<HashMap<i32, Arc<Mutex<Vec<Uuid>>>>>>);
 pub fn new_user_sessionid_map() -> UserSessionIdMap {
@@ -218,7 +245,7 @@ pub fn new_user_sessionid_map() -> UserSessionIdMap {
 #[derive(Serialize)]
 #[serde(tag = "event_type", content = "data")]
 pub enum WebSocketEvent {
-    Message(Message),
+    Message(MessageWithServer),
     UserJoin(UserJoin),
     ServerCreated(ServerCreated),
 }

@@ -18,7 +18,8 @@ const useGetMessages = () => {
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch(
-        `/api/messages/get/${selectedChannel.channel_id}`,
+        `${import.meta.env.VITE_API_URL}/api/messages/get/${selectedChannel.channel_id}`,
+        { credentials: "include" },
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -31,11 +32,18 @@ const useGetMessages = () => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await fetch(`/api/servers/users/${selectedServer.server_id}`);
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/servers/users/${selectedServer.server_id}`,
+        {
+          credentials: "include",
+        },
+      );
+      console.log("Response headers:", res.headers.get("Content-Type"));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       return data;
     } catch (error) {
+      console.log(4);
       toast.error(error.message);
       return null;
     }

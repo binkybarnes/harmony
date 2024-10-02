@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO channels (server_id, channel_name)\n        VALUES ($1, $2)\n        RETURNING *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "channel_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "server_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "channel_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "02c479a5b26b018e4cdf0d3f45e45004accc71a3740dc2464e66a928924c2929"
+}
