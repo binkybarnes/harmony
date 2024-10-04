@@ -36,8 +36,8 @@ const Conversation = ({ handleClick, conversation }) => {
   // temporary hard coded profile picture
   return (
     <div
-      onClick={handleClick}
-      className={`active:bg-base-50 hover:text-content-muted-50 active:text-content-header mb-1 flex h-[52px] items-center gap-2 rounded-md p-1.5 hover:cursor-pointer hover:bg-base-100 ${isSelected ? "bg-base-50 text-content-header" : "text-content-muted-100 bg-base-200"} `}
+      onClick={() => handleClick(conversation)}
+      className={`mb-1 flex h-[52px] items-center gap-2 rounded-md p-1.5 hover:cursor-pointer hover:bg-base-100 hover:text-content-muted-50 active:bg-base-50 active:text-content-header ${isSelected ? "bg-base-50 text-content-header" : "bg-base-200 text-content-muted-100"} `}
     >
       <div className="h-10 w-10 overflow-hidden rounded-md bg-primary">
         {otherUser.s3_icon_key ? (
@@ -74,6 +74,7 @@ Conversation.propTypes = {
       server_type: PropTypes.string,
       members: PropTypes.number,
       server_name: PropTypes.string,
+      unread_messages: PropTypes.number,
     }),
     channel: PropTypes.shape({
       channel_id: PropTypes.number,

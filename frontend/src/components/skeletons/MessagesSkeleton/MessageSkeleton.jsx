@@ -4,10 +4,10 @@ const MessageSkeleton = ({ numBlobs }) => {
   return (
     <div className="relative mt-4 rounded-md pl-16">
       <div className="absolute left-4 select-none">
-        <div className="bg-content-muted-100 h-10 w-10 rounded-md object-contain"></div>
+        <div className="h-10 w-10 rounded-md bg-content-muted-100 object-contain"></div>
       </div>
       <h3 className="h-5">
-        <div className="message-skeleton bg-content-muted-100 w-32"></div>
+        <div className="message-skeleton w-32 bg-content-muted-100"></div>
       </h3>
 
       <div className="h-5">
@@ -15,7 +15,7 @@ const MessageSkeleton = ({ numBlobs }) => {
           <div
             key={i}
             style={{ width: `${Math.floor(Math.random() * 10 + 4)}rem` }}
-            className="message-skeleton bg-gray-500"
+            className="message-skeleton bg-content-muted-100"
           ></div>
         ))}
         {/* <div className="message-skeleton w-[3rem] bg-gray-500"></div>

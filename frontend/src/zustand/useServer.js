@@ -21,6 +21,21 @@ const useServer = create((set) => ({
 
   servers: [],
   setServers: (servers) => set({ servers }),
+  updateServerUnread: (server_id, unread_messages) =>
+    set((state) => ({
+      servers: state.servers.map((server) => {
+        if (server.server_id === server_id) {
+          return {
+            ...server,
+            unread_messages:
+              unread_messages === "increment"
+                ? server.unread_messages + 1
+                : unread_messages,
+          };
+        }
+        return server;
+      }),
+    })),
   addServer: (newServer) =>
     set((state) => ({ servers: [newServer, ...state.servers] })),
   removeServer: (server_id) =>
@@ -30,6 +45,24 @@ const useServer = create((set) => ({
 
   // {server, channel, users}
   conversations: [],
+  updateConversationUnread: (server_id, unread_messages) =>
+    set((state) => ({
+      conversations: state.conversations.map((conversation) => {
+        if (conversation.server.server_id === server_id) {
+          return {
+            ...conversation,
+            server: {
+              ...conversation.server,
+              unread_messages:
+                unread_messages === "increment"
+                  ? conversation.server.unread_messages + 1
+                  : unread_messages,
+            },
+          };
+        }
+        return conversation;
+      }),
+    })),
   setConversations: (conversations) =>
     set({
       conversations: conversations.sort((a, b) => {

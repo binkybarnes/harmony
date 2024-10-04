@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import useServer from "../zustand/useServer";
 import toast from "react-hot-toast";
+import useUpdateLastReadMessage from "./useUpdateLastReadMessage";
 
 const useGetMessages = () => {
   const [loading, setLoading] = useState(false);
   const selectedServer = useServer((state) => state.selectedServer);
   const selectedChannel = useServer((state) => state.selectedChannel);
+  const { UpdateLastReadMessage } = useUpdateLastReadMessage();
+
+  const updateConversationUnread = useServer(
+    (state) => state.updateConversationUnread,
+  );
+  const updateServerUnread = useServer((state) => state.updateServerUnread);
 
   // const messages = useServer((state) => state.messages);
   // const setMessages = useServer((state) => state.setMessages);
@@ -38,12 +45,10 @@ const useGetMessages = () => {
           credentials: "include",
         },
       );
-      console.log("Response headers:", res.headers.get("Content-Type"));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       return data;
     } catch (error) {
-      console.log(4);
       toast.error(error.message);
       return null;
     }
@@ -61,9 +66,23 @@ const useGetMessages = () => {
       if (usersData && messagesData) {
         setUsers(usersData);
         setMessages(messagesData);
-      }
 
-      setLoading(false);
+        const last_message_id = messagesData.slice(-1)[0]?.message_id;
+        if (last_message_id) {
+          UpdateLastReadMessage(selectedServer.server_id, last_message_id);
+        }
+
+        // clicking on any of the server's channels will get rid of the unread
+        if (
+          selectedServer.server_type === "Dm" ||
+          selectedServer.server_type === "GroupChat"
+        ) {
+          console.log("rat");
+          updateConversationUnread(selectedServer.server_id, 0);
+        } else if (selectedServer.server_type === "Server") {
+          updateServerUnread(selectedServer.server_id, 0);
+        }
+      }
 
       setLoading(false);
     };
@@ -74,6 +93,10 @@ const useGetMessages = () => {
     selectedChannel?.channel_id,
     fetchMessages,
     fetchUsers,
+    UpdateLastReadMessage,
+    selectedServer.server_type,
+    updateConversationUnread,
+    updateServerUnread,
   ]);
   return { loading, messages, users };
 };

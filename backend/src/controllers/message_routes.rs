@@ -53,21 +53,29 @@ pub async fn send_message(
     .await
     .map_err(|_| (Status::BadRequest, json_error("database error")))?;
 
-    match server_type {
-        ServerType::Dm | ServerType::GroupChat => {
-            sqlx::query!(
-                "UPDATE servers
+    // update timestamp of the last message
+    sqlx::query!(
+        "UPDATE servers
                 SET last_message_at = $1
                 WHERE server_id = $2",
-                message.timestamp,
-                server_id
-            )
-            .execute(&mut **db)
-            .await
-            .map_err(|_| (Status::BadRequest, json_error("database error")))?;
-        }
-        ServerType::Server => {}
-    };
+        message.timestamp,
+        server_id
+    )
+    .execute(&mut **db)
+    .await
+    .map_err(|_| (Status::BadRequest, json_error("database error")))?;
+
+    // update last message id
+    sqlx::query!(
+        "UPDATE servers
+        SET last_message_id = $1
+        WHERE server_id = $2",
+        message.message_id,
+        server_id
+    )
+    .execute(&mut **db)
+    .await
+    .map_err(|_| (Status::BadRequest, json_error("database error")))?;
 
     let event = WebSocketEvent::Message(MessageWithServer {
         message: message.clone(),

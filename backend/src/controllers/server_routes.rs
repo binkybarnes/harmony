@@ -1,8 +1,9 @@
 use crate::middleware::protect_route::JwtGuard;
 use crate::models::{
     Channel, CreateChannelInput, CreateServerInput, EditServerInput, OptionalServerChannel, Server,
-    ServerChannel, ServerCreated, ServerIds, ServerSessionIdMap, ServerType, SessionIdWebsocketMap,
-    User, UserJoin, UserSessionIdMap, WebSocketEvent,
+    ServerChannel, ServerCreated, ServerIds, ServerSessionIdMap, ServerType,
+    ServerWithUnreadMessages, SessionIdWebsocketMap, User, UserJoin, UserSessionIdMap,
+    WebSocketEvent,
 };
 use crate::utils::aws_s3_utils::{remove_from_s3, upload_to_s3};
 use crate::utils::broadcast_ws_message::{broadcast_to_server, broadcast_to_users};
@@ -15,7 +16,6 @@ use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client;
 use rocket::form::Form;
 use rocket::http::Status;
-use rocket::response::Responder;
 use rocket::serde::json::Json;
 use rocket::State;
 use rocket_db_pools::Connection;
@@ -29,7 +29,7 @@ pub async fn get_servers(
     guard: JwtGuard,
     server_type: &str,
     mut db: Connection<database::HarmonyDb>,
-) -> impl Responder {
+) -> Result<Json<Vec<ServerWithUnreadMessages>>, (Status, Json<ErrorResponse>)> {
     let user_id = &guard.0.sub;
 
     // validate server_type
@@ -44,7 +44,7 @@ pub async fn get_servers(
     let servers = sqlx::query_as!(
         models::Server,
         r#"SELECT 
-        s.server_id, s.server_type AS "server_type!: ServerType", s.members, s.server_name, s.admins, s.s3_icon_key, s.last_message_at
+        s.server_id, s.server_type AS "server_type!: ServerType", s.members, s.server_name, s.admins, s.s3_icon_key, s.last_message_at, s.last_message_id
         FROM servers s
         JOIN users_servers us ON us.server_id = s.server_id
         WHERE us.user_id = $1 AND s.server_type = $2
@@ -56,7 +56,57 @@ pub async fn get_servers(
     .await
     .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
 
-    Ok(Json(servers))
+    let mut servers_with_unread_messages = Vec::new();
+
+    for server in servers {
+        // Fetch last read message ID
+        let last_read_message_id = sqlx::query_scalar!(
+            "SELECT last_read_message_id
+             FROM users_servers
+             WHERE user_id = $1 AND server_id = $2",
+            user_id,
+            server.server_id
+        )
+        .fetch_one(&mut **db)
+        .await
+        .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
+
+        // Calculate the number of unread messages
+        let unread_messages = if let Some(last_read_message_id) = last_read_message_id {
+            sqlx::query_scalar!(
+                "SELECT COUNT(*)
+                 FROM messages m
+                 JOIN channels c ON m.channel_id = c.channel_id
+                 WHERE c.server_id = $1 AND m.message_id > $2",
+                server.server_id,
+                last_read_message_id
+            )
+            .fetch_one(&mut **db)
+            .await
+            .map_err(|_| (Status::BadRequest, json_error("Database error")))?
+            .unwrap_or(0)
+        } else {
+            0
+        };
+
+        // Create the ServerWithUnreadMessages instance
+        let server_with_unread = ServerWithUnreadMessages {
+            server_id: server.server_id,
+            server_type: server.server_type,
+            members: server.members,
+            server_name: server.server_name,
+            admins: server.admins,
+            s3_icon_key: server.s3_icon_key,
+            last_message_at: server.last_message_at,
+            last_message_id: server.last_message_id,
+            unread_messages,
+        };
+
+        // Add it to the results
+        servers_with_unread_messages.push(server_with_unread);
+    }
+
+    Ok(Json(servers_with_unread_messages))
 }
 
 // used in usermenu message button to check if dm exists
@@ -72,7 +122,7 @@ pub async fn get_dm(
         Server,
         r#"
         SELECT
-        s.server_id, s.server_type AS "server_type!: ServerType", s.members, s.server_name, s.admins, s.s3_icon_key, s.last_message_at
+        s.server_id, s.server_type AS "server_type!: ServerType", s.members, s.server_name, s.admins, s.s3_icon_key, s.last_message_at, s.last_message_id
         FROM servers s
         JOIN users_servers us1 ON s.server_id = us1.server_id
         JOIN users_servers us2 ON s.server_id = us2.server_id
@@ -92,7 +142,7 @@ pub async fn get_dm(
         let channel = sqlx::query_as!(
             Channel,
             "SELECT * FROM channels
-    WHERE server_id = $1",
+            WHERE server_id = $1",
             server.server_id
         )
         .fetch_one(&mut **db)
@@ -120,7 +170,7 @@ pub async fn search_servers_name(
     let servers = sqlx::query_as!(
         Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at, last_message_id
         FROM servers
         WHERE server_type = 'server' AND server_name % $1
         ORDER BY (SIMILARITY(server_name, 'skibidi') * 0.3 + LOG(members + 1) * 0.7) DESC
@@ -144,7 +194,7 @@ pub async fn search_servers_id(
     let servers = sqlx::query_as!(
         Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at, last_message_id
         FROM servers
         WHERE server_type = 'server' AND server_id = $1"#,
         id
@@ -164,7 +214,7 @@ pub async fn get_servers_popular(
     let servers = sqlx::query_as!(
         Server,
         r#"
-        SELECT server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
+        SELECT server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at, last_message_id
         FROM SERVERS
         WHERE server_type = 'server'
         ORDER BY members DESC
@@ -191,7 +241,7 @@ pub async fn join_server(
     let server = sqlx::query_as!(
         models::Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at, last_message_id
         FROM servers WHERE server_id = $1"#,
         server_id
     )
@@ -523,7 +573,7 @@ pub async fn edit_server(
     let server = sqlx::query_as!(
         Server,
         r#"SELECT
-        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at
+        server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at, last_message_id
         FROM servers
         WHERE server_id = $1
         "#,
@@ -580,7 +630,7 @@ async fn create_server_helper(
         models::Server,
         r#"INSERT INTO public.servers (server_type, members, server_name, admins, s3_icon_key)
         VALUES ($1, 0, $2, ARRAY[$3]::integer[], $4) 
-        RETURNING server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at"#,
+        RETURNING server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at, last_message_id"#,
         server_type as ServerType,
         server_name,
         user_id,
@@ -841,4 +891,29 @@ async fn get_users_helper(
     .map_err(|_| (Status::BadRequest, json_error("Database error")))?;
 
     Ok(users)
+}
+
+// updates last read message id for given user
+#[patch("/<server_id>/last-read-message/<message_id>")]
+pub async fn update_last_read_message(
+    guard: JwtGuard,
+    server_id: i32,
+    message_id: i64,
+    mut db: Connection<database::HarmonyDb>,
+) -> Result<(), (Status, Json<ErrorResponse>)> {
+    let user_id = &guard.0.sub;
+
+    sqlx::query!(
+        "UPDATE users_servers
+        SET last_read_message_id = $1
+        WHERE user_id = $2 AND server_id = $3",
+        message_id,
+        user_id,
+        server_id
+    )
+    .execute(&mut **db)
+    .await
+    .map_err(|_| (Status::InternalServerError, json_error("Database error")))?;
+
+    Ok(())
 }

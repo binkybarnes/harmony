@@ -3,13 +3,9 @@ import { usePopupContext } from "../popups/PopupContext";
 import useServer from "../../zustand/useServer";
 import { useMemo } from "react";
 
-const Server = ({ server }) => {
+const Server = ({ server, handleClick }) => {
   const { handleServerHover } = usePopupContext();
-  const setSelectedConversation = useServer(
-    (state) => state.setSelectedConversation,
-  );
-  const setSelectedServer = useServer((state) => state.setSelectedServer);
-  const setSelectedChannel = useServer((state) => state.setSelectedChannel);
+
   const selectedServer = useServer((state) => state.selectedServer);
 
   const serverName = server.server_name;
@@ -34,44 +30,66 @@ const Server = ({ server }) => {
     handleServerHover(false, serverName, {});
   };
 
-  const handleClick = () => {
-    setSelectedConversation(null);
-    setSelectedServer(server);
-    // TODO: CHANGE TO LAST VISITED CHANNEL?
-    setSelectedChannel(null);
-  };
-
   return (
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
+      onClick={() => handleClick(server)}
       className="group mb-2"
     >
-      <div
+      <div className="relative group-hover:cursor-pointer">
+        <div
+          className={`overflow-hidden transition-all duration-100 hover:bg-primary group-hover:rounded-[1.2rem] group-active:translate-y-[1.5px] ${
+            selectedServer?.server_id === server.server_id
+              ? "rounded-[1.2rem] bg-primary"
+              : "rounded-md bg-base-100"
+          }`}
+        >
+          {server.s3_icon_key ? (
+            <img
+              draggable={false}
+              className="h-[48px] w-[48px]"
+              src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/server-icons/${server.s3_icon_key}`}
+            />
+          ) : (
+            <div
+              style={{
+                fontSize: `clamp(0.625rem, ${4 / serverNameAbbrev.length}rem, 1rem)`,
+              }}
+              className="flex h-[48px] w-[48px] items-center justify-center font-medium text-content-normal"
+            >
+              {serverNameAbbrev}
+            </div>
+          )}
+        </div>
+        {server.unread_messages > 0 ? (
+          <>
+            <div
+              style={{
+                width: `${server.unread_messages < 10 ? "24px" : server.unread_messages < 100 ? "30px" : "38px"}`,
+              }}
+              className="absolute bottom-0 right-0 h-6 translate-x-1 translate-y-1 rounded-xl bg-base-400"
+            ></div>
+            <div
+              style={{
+                width: `${server.unread_messages < 10 ? "16px" : server.unread_messages < 100 ? "22px" : "30px"}`,
+              }}
+              className="absolute bottom-0 right-0 flex w-[30px] items-center justify-center rounded-lg bg-error text-xs font-bold text-white"
+            >
+              {server.unread_messages < 1000 ? server.unread_messages : "1K+"}
+            </div>
+          </>
+        ) : null}
+      </div>
+      {/* <div
         className={`overflow-hidden ${
           selectedServer?.server_id === server.server_id
             ? "rounded-[1.2rem] bg-primary"
             : "rounded-md bg-base-100"
         } transition-all duration-100 hover:bg-primary group-hover:cursor-pointer group-hover:rounded-[1.2rem] group-active:translate-y-[1.5px]`}
       >
-        {server.s3_icon_key ? (
-          <img
-            draggable={false}
-            className="h-[48px] w-[48px]"
-            src={`https://${import.meta.env.VITE_CLOUDFRONT_IMAGE_URL}/server-icons/${server.s3_icon_key}`}
-          />
-        ) : (
-          <div
-            style={{
-              fontSize: `clamp(0.625rem, ${4 / serverNameAbbrev.length}rem, 1rem)`,
-            }}
-            className="flex h-[48px] w-[48px] items-center justify-center font-medium text-content-normal"
-          >
-            {serverNameAbbrev}
-          </div>
-        )}
-      </div>
+        
+      </div> */}
     </div>
   );
 };
@@ -83,7 +101,9 @@ Server.propTypes = {
     members: PropTypes.number,
     server_name: PropTypes.string,
     s3_icon_key: PropTypes.oneOfType([PropTypes.string, PropTypes.any]),
+    unread_messages: PropTypes.number,
   }),
+  handleClick: PropTypes.func,
 };
 
 export default Server;

@@ -111,6 +111,19 @@ pub struct Server {
     pub admins: Vec<i32>,
     pub s3_icon_key: Option<String>,
     pub last_message_at: Option<DateTime<Utc>>,
+    pub last_message_id: Option<i64>,
+}
+#[derive(Serialize, Clone)]
+pub struct ServerWithUnreadMessages {
+    pub server_id: i32,
+    pub server_type: ServerType,
+    pub members: i32,
+    pub server_name: String,
+    pub admins: Vec<i32>,
+    pub s3_icon_key: Option<String>,
+    pub last_message_at: Option<DateTime<Utc>>,
+    pub last_message_id: Option<i64>,
+    pub unread_messages: i64,
 }
 
 #[derive(Serialize, Clone)]

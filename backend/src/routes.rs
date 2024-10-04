@@ -43,6 +43,7 @@ pub fn build() -> Rocket<Build> {
                 controllers::server_routes::get_channels,
                 controllers::server_routes::get_users_list,
                 controllers::server_routes::get_users,
+                controllers::server_routes::update_last_read_message
             ],
         )
         .mount("/api/users", routes![controllers::users_routes::edit_user])

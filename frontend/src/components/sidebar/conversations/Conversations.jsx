@@ -1,7 +1,7 @@
 import Conversation from "./Conversation";
 
 import toast from "react-hot-toast";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import useConversationInfo from "../../../hooks/useConversationInfo";
 import useServer from "../../../zustand/useServer";
 
@@ -18,6 +18,7 @@ const Conversations = () => {
   );
   const setSelectedServer = useServer((state) => state.setSelectedServer);
   const setSelectedChannel = useServer((state) => state.setSelectedChannel);
+
   // TODO: put groupchats in here
   // TODO: handle the server name in the backend?
   const { loading, conversations: fetchedConversations } =
@@ -27,8 +28,6 @@ const Conversations = () => {
     () => setConversations(fetchedConversations),
     [fetchedConversations, setConversations],
   );
-
-  console.log(conversations);
 
   const handleConversationClick = useCallback(
     (conversation) => {
@@ -42,9 +41,6 @@ const Conversations = () => {
   );
 
   const mapDmConversations = useMemo(() => {
-    if (!conversations) {
-      return null;
-    }
     return conversations.map((conversation) => {
       if (conversation.users.length != 2) {
         toast.error("DM servers should have only 2 members");
@@ -54,7 +50,7 @@ const Conversations = () => {
       return (
         <Conversation
           key={conversation.server.server_id}
-          handleClick={() => handleConversationClick(conversation)}
+          handleClick={handleConversationClick}
           conversation={conversation}
         />
       );
