@@ -16,16 +16,22 @@ CREATE TABLE servers (
     members INTEGER NOT NULL DEFAULT 0,
     server_name TEXT NOT NULL,
     admins INTEGER[] NOT NULL DEFAULT '{}',
-    s3_icon_key TEXT
+    s3_icon_key TEXT,
+    last_message_at TIMESTAMPTZ,
+    last_message_id BIGINT REFERENCES messages (message_id)
 );
+CREATE INDEX idx_server_id_hash ON servers USING hash (server_id);
 
 
 CREATE TABLE users_servers (
     user_id INTEGER NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
     server_id INTEGER NOT NULL REFERENCES servers (server_id) ON DELETE CASCADE,
     PRIMARY KEY(user_id, server_id),
-    joined_date TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    joined_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_read_message_id BIGINT REFERENCES messages (message_id)
 );
+CREATE INDEX idx_user_server_btree
+ON users_servers (user_id, server_id);
 
 
 CREATE TABLE channels (
@@ -33,6 +39,7 @@ CREATE TABLE channels (
     server_id INTEGER NOT NULL REFERENCES servers (server_id) ON DELETE CASCADE,
     channel_name TEXT NOT NULL DEFAULT 'channel'::text
 );
+CREATE INDEX idx_channel_id_hash ON channels USING hash (channel_id);
 
 
 CREATE TABLE messages (

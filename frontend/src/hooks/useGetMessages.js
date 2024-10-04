@@ -77,7 +77,6 @@ const useGetMessages = () => {
           selectedServer.server_type === "Dm" ||
           selectedServer.server_type === "GroupChat"
         ) {
-          console.log("rat");
           updateConversationUnread(selectedServer.server_id, 0);
         } else if (selectedServer.server_type === "Server") {
           updateServerUnread(selectedServer.server_id, 0);

@@ -4,7 +4,6 @@ import toast from "react-hot-toast";
 const useUpdateLastReadMessage = () => {
   const UpdateLastReadMessage = useCallback(async (server_id, message_id) => {
     try {
-      console.log(message_id);
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/api/servers/${server_id}/last-read-message/${message_id}`,
         {

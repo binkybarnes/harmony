@@ -1,9 +1,8 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebsocketContext } from "../../context/WebsocketContext";
 import useServer from "../../zustand/useServer";
 import toast from "react-hot-toast";
 import useUpdateLastReadMessage from "../useUpdateLastReadMessage";
-
 const useListenMessages = () => {
   const { websocket } = useWebsocketContext();
   const addMessage = useServer((state) => state.addMessage);
@@ -16,6 +15,11 @@ const useListenMessages = () => {
   const setConversations = useServer((state) => state.setConversations);
   const updateServerUnread = useServer((state) => state.updateServerUnread);
   const { UpdateLastReadMessage } = useUpdateLastReadMessage();
+
+  const [ping] = useState(new Audio("/harmony_ping_sound.mp3"));
+  const playSound = useCallback(() => {
+    ping.play();
+  }, [ping]);
   useEffect(() => {
     if (!websocket) return;
     const handleIncomingMessage = (event) => {
@@ -59,8 +63,8 @@ const useListenMessages = () => {
               ws_event.data.server_type === "Dm" ||
               ws_event.data.server_type === "GroupChat"
             ) {
-              console.log("rat");
               updateConversationUnread(ws_event.data.server_id, "increment");
+              playSound();
             } else if (ws_event.data.server_type === "Server") {
               updateServerUnread(ws_event.data.server_id, "increment");
             }
@@ -86,6 +90,7 @@ const useListenMessages = () => {
     setConversations,
     updateConversationUnread,
     updateServerUnread,
+    playSound,
   ]);
 };
 
