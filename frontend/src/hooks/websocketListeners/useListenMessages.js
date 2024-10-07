@@ -18,7 +18,8 @@ const useListenMessages = () => {
 
   const [ping] = useState(new Audio("/harmony_ping_sound.mp3"));
   const playSound = useCallback(() => {
-    ping.play();
+    const newPing = new Audio(ping.src);
+    newPing.play();
   }, [ping]);
   useEffect(() => {
     if (!websocket) return;

@@ -48,10 +48,10 @@ const SearchServersName = ({ setServers }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="bg-base-400 flex h-10 items-center overflow-hidden rounded-md pr-2">
+      <div className="flex h-10 items-center overflow-hidden rounded-md bg-base-400 pr-2">
         <RiArrowDropDownLine
           onClick={handleClick}
-          className="text-button flex-shrink-0 hover:cursor-pointer"
+          className="flex-shrink-0 text-button hover:cursor-pointer"
           size={32}
         />
         <input
@@ -60,9 +60,9 @@ const SearchServersName = ({ setServers }) => {
           onChange={handleInputChange}
           value={searchTerm}
           placeholder={`Search server ${searchName ? "name" : "ID"}...`}
-          className="text-content-normal h-full flex-1 bg-transparent"
+          className="h-full flex-1 bg-transparent text-content-normal"
         />
-        <IoSearchOutline className="flex-shrink-0" size={20} />
+        <IoSearchOutline className="flex-shrink-0 text-button" size={20} />
       </div>
     </form>
   );

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useAuthContext } from "../context/AuthContext";
 
 // usually only for server type server, cause the other server types need serverids and userslist
 const useGetServers = (serverType) => {
   const [loading, setLoading] = useState(false);
   const [servers, setServers] = useState([]);
+  const { removeLocalStorageAuthUser } = useAuthContext();
 
   useEffect(() => {
     const getServers = async () => {
@@ -15,6 +17,9 @@ const useGetServers = (serverType) => {
           { credentials: "include" },
         );
         const data = await res.json();
+        if (res.status === 401) {
+          removeLocalStorageAuthUser(null);
+        }
         if (!res.ok) throw new Error(data.error);
         setServers(data);
       } catch (error) {
@@ -25,7 +30,7 @@ const useGetServers = (serverType) => {
     };
 
     getServers();
-  }, [serverType]);
+  }, [serverType, removeLocalStorageAuthUser]);
 
   return { loading, servers };
 };

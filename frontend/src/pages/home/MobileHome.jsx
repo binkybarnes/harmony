@@ -17,7 +17,7 @@ import UserMenu from "../../components/popups/userMenu/UserMenu";
 import useListenServerCreated from "../../hooks/websocketListeners/useListenServerCreated";
 import useListenMessages from "../../hooks/websocketListeners/useListenMessages";
 
-const Home = () => {
+const MobileHome = () => {
   const selectedServer = useServer((state) => state.selectedServer);
   useListenServerCreated();
   useListenMessages();
@@ -56,4 +56,4 @@ const Home = () => {
     </div>
   );
 };
-export default Home;
+export default MobileHome;

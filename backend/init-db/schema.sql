@@ -21,7 +21,8 @@ CREATE TABLE servers (
     last_message_id BIGINT REFERENCES messages (message_id)
 );
 CREATE INDEX idx_server_id_hash ON servers USING hash (server_id);
-
+CREATE EXTENSION pg_trgm;
+CREATE INDEX server_name_trgm_idx ON servers USING gin (server_name gin_trgm_ops);
 
 CREATE TABLE users_servers (
     user_id INTEGER NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
@@ -30,8 +31,7 @@ CREATE TABLE users_servers (
     joined_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_read_message_id BIGINT REFERENCES messages (message_id)
 );
-CREATE INDEX idx_user_server_btree
-ON users_servers (user_id, server_id);
+CREATE INDEX idx_user_server_btree ON users_servers (user_id, server_id);
 
 
 CREATE TABLE channels (

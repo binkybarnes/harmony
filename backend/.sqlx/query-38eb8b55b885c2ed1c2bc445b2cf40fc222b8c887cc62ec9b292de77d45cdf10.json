@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*)\n                 FROM messages m\n                 JOIN channels c ON m.channel_id = c.channel_id\n                 WHERE c.server_id = $1 AND m.message_id > $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "38eb8b55b885c2ed1c2bc445b2cf40fc222b8c887cc62ec9b292de77d45cdf10"
+}

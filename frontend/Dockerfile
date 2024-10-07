@@ -11,7 +11,8 @@ COPY . .
 RUN npm run build
 
 FROM nginx:alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# RUN apk add --no-cache certbot certbot-nginx
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80
 EXPOSE 443
@@ -20,5 +21,6 @@ CMD ["nginx", "-g", "daemon off;"]
 
 # docker build \                                                                                                                                                               (base) 
 # --build-arg VITE_CLOUDFRONT_IMAGE_URL=d2fk3ssa9pe12k.cloudfront.net \
-# --build-arg VITE_API_URL=https://harmonyapp.xyz:5500 \
+# --build-arg VITE_API_URL=https://harmonyapp.xyz \
 # -t binkybarnes/harmony-frontend .
+

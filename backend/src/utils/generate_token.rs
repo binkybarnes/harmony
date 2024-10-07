@@ -30,7 +30,7 @@ pub fn jwt_cookie(user_id: i32) -> Cookie<'static> {
     // secure must be true when different origin and same site is none, or cookies wont be sent from the browser
     Cookie::build(("JWT", token))
         .path("/")
-        .max_age(Duration::hours(12))
+        .max_age(Duration::days(7))
         .secure(true) //dotenv::var("RUST_ENV").expect("set RUST_ENV") != "development")
         .http_only(true)
         .same_site(cookie::SameSite::None)

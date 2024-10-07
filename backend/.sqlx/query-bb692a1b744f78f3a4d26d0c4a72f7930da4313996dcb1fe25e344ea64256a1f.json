@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE servers\n        SET last_message_id = $1\n        WHERE server_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bb692a1b744f78f3a4d26d0c4a72f7930da4313996dcb1fe25e344ea64256a1f"
+}

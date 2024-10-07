@@ -263,6 +263,28 @@ pub enum WebSocketEvent {
     ServerCreated(ServerCreated),
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "event_type", content = "data")]
+pub enum WebRTCWebSocketEvent {
+    Offer {
+        sdp: String,
+        to: i32,
+        from: i32,
+    },
+    Answer {
+        sdp: String,
+        to: i32,
+        from: i32,
+    },
+    IceCandidate {
+        candidate: String,
+        sdp_mid: Option<String>,      // `sdpMid` from the ICE candidate
+        sdp_mline_index: Option<u32>, // `sdpMLineIndex` from the ICE candidate
+        to: i32,
+        from: i32,
+    },
+}
+
 #[derive(Serialize)]
 pub struct UserJoin {
     pub user: User,

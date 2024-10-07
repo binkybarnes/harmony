@@ -173,7 +173,7 @@ pub async fn search_servers_name(
         server_id, server_type AS "server_type!: ServerType", members, server_name, admins, s3_icon_key, last_message_at, last_message_id
         FROM servers
         WHERE server_type = 'server' AND server_name % $1
-        ORDER BY (SIMILARITY(server_name, 'skibidi') * 0.3 + LOG(members + 1) * 0.7) DESC
+        ORDER BY (SIMILARITY(server_name, $1) * 0.3 + LOG(members + 1) * 0.7) DESC
         LIMIT 100"#,
         name
     )
@@ -292,7 +292,13 @@ pub async fn join_server(
             json_error("serialization error"),
         )
     })?;
-    broadcast_to_server(&user_json, server_id, websocket_map_state, server_map_state).await;
+    broadcast_to_server(
+        &user_json,
+        server_id,
+        websocket_map_state.inner().clone(),
+        ServerSessionIdMap(server_map_state.0.clone()),
+    )
+    .await;
 
     Ok::<_, (Status, Json<ErrorResponse>)>(Json(server))
 }
@@ -469,8 +475,8 @@ pub async fn create_server(
     broadcast_to_users(
         &message_json,
         &combined_ids,
-        websocket_map_state,
-        user_map_state,
+        websocket_map_state.inner().clone(),
+        UserSessionIdMap(user_map_state.0.clone()),
     )
     .await;
 

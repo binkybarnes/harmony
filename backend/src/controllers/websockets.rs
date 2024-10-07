@@ -4,7 +4,10 @@ use crate::models::ErrorResponse;
 use crate::models::Server;
 use crate::models::ServerType;
 use crate::models::UserSessionIdMap;
+use crate::models::WebRTCWebSocketEvent;
+use crate::models::WebSocketEvent;
 use crate::models::{ServerSessionIdMap, SessionIdWebsocketMap};
+use crate::utils::broadcast_ws_message::broadcast_to_user;
 use crate::utils::json_error::json_error;
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -26,9 +29,9 @@ pub async fn websocket_handler(
     mut db: Connection<HarmonyDb>,
 ) -> Channel<'static> {
     let session_id = Uuid::new_v4();
-    let websocket_map_state = websocket_map_state.inner().clone();
-    let server_map_state = server_map_state.0.clone();
-    let user_map_state = user_map_state.0.clone();
+    let websocket_map = websocket_map_state.inner().clone();
+    let server_map = server_map_state.0.clone();
+    let user_map = user_map_state.0.clone();
 
     let servers = get_all_servers(user_id, &mut db).await.unwrap();
 
@@ -41,12 +44,12 @@ pub async fn websocket_handler(
 
             // map session_id to websocket sender
             {
-                let mut websocket_map = websocket_map_state.lock().await;
+                let mut websocket_map = websocket_map.lock().await;
                 websocket_map.insert(session_id, sender);
             }
             // add the websocket sender to every server the user is in
             {
-                let mut server_map = server_map_state.lock().await;
+                let mut server_map = server_map.lock().await;
                 for server in servers.iter() {
                     let entry = server_map
                         .entry(server.server_id)
@@ -57,7 +60,7 @@ pub async fn websocket_handler(
             }
             // add session_id to user bucket
             {
-                let mut user_map = user_map_state.lock().await;
+                let mut user_map = user_map.lock().await;
                 let entry = user_map
                     .entry(user_id)
                     .or_insert_with(|| Arc::new(Mutex::new(Vec::new())));
@@ -69,9 +72,75 @@ pub async fn websocket_handler(
             // Process incoming messages
             tokio::spawn(async move {
                 while let Some(message) = receiver.next().await {
+                    println!("rat");
                     match message {
                         Ok(msg) => {
-                            println!("Received message{:?}", msg);
+                            if let Ok(ws_msg) =
+                                serde_json::from_str::<WebRTCWebSocketEvent>(&msg.to_string())
+                            {
+                                match ws_msg {
+                                    WebRTCWebSocketEvent::Offer { sdp, to, from } => {
+                                        // Forward SDP offer to the recipient
+                                        let offer =
+                                            serde_json::to_string(&WebRTCWebSocketEvent::Offer {
+                                                sdp,
+                                                to,
+                                                from,
+                                            })
+                                            .unwrap();
+                                        broadcast_to_user(
+                                            &offer,
+                                            to,
+                                            websocket_map.clone(),
+                                            UserSessionIdMap(user_map.clone()),
+                                        )
+                                        .await;
+                                    }
+                                    WebRTCWebSocketEvent::Answer { sdp, to, from } => {
+                                        // Forward SDP answer to the caller
+                                        let answer =
+                                            serde_json::to_string(&WebRTCWebSocketEvent::Answer {
+                                                sdp,
+                                                to,
+                                                from,
+                                            })
+                                            .unwrap();
+                                        broadcast_to_user(
+                                            &answer,
+                                            to,
+                                            websocket_map.clone(),
+                                            UserSessionIdMap(user_map.clone()),
+                                        )
+                                        .await;
+                                    }
+                                    WebRTCWebSocketEvent::IceCandidate {
+                                        candidate,
+                                        sdp_mid,
+                                        sdp_mline_index,
+                                        to,
+                                        from,
+                                    } => {
+                                        // Forward ICE candidate to the peer
+                                        let ice_msg = serde_json::to_string(
+                                            &WebRTCWebSocketEvent::IceCandidate {
+                                                candidate,
+                                                sdp_mid,
+                                                sdp_mline_index,
+                                                to,
+                                                from,
+                                            },
+                                        )
+                                        .unwrap();
+                                        broadcast_to_user(
+                                            &ice_msg,
+                                            to,
+                                            websocket_map.clone(),
+                                            UserSessionIdMap(user_map.clone()),
+                                        )
+                                        .await;
+                                    }
+                                }
+                            }
                         }
                         Err(e) => {
                             println!("Error in channel {:?}", e);
@@ -84,14 +153,14 @@ pub async fn websocket_handler(
                 // print_server_sessionid_map(server_map_state.clone()).await;
                 // Remove session_id from websocket map
                 {
-                    let mut websocket_map = websocket_map_state.lock().await;
+                    let mut websocket_map = websocket_map.lock().await;
                     websocket_map.remove(&session_id);
                 }
                 // remove session_id from server map
                 {
                     for server in servers.iter() {
                         let arc_mutex_vec = {
-                            let server_map = server_map_state.lock().await;
+                            let server_map = server_map.lock().await;
                             server_map.get(&server.server_id).cloned()
                         };
 
@@ -100,7 +169,7 @@ pub async fn websocket_handler(
                             vec.retain(|id| *id != session_id);
 
                             if vec.is_empty() {
-                                let mut server_map = server_map_state.lock().await;
+                                let mut server_map = server_map.lock().await;
                                 server_map.remove(&server.server_id);
                             }
                         }
@@ -109,7 +178,7 @@ pub async fn websocket_handler(
                 // remove session_id from user map
                 {
                     let arc_mutex_vec = {
-                        let user_map = user_map_state.lock().await;
+                        let user_map = user_map.lock().await;
                         user_map.get(&user_id).cloned()
                     };
 
@@ -117,7 +186,7 @@ pub async fn websocket_handler(
                         let mut vec = arc_mutex_vec.lock().await;
                         vec.retain(|id| *id != session_id);
                         if vec.is_empty() {
-                            let mut user_map = user_map_state.lock().await;
+                            let mut user_map = user_map.lock().await;
                             user_map.remove(&user_id);
                         }
                     }

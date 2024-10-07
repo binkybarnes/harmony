@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT server_id, server_type AS \"server_type!: ServerType\", members, server_name, admins, s3_icon_key\n        FROM SERVERS\n        WHERE server_type = 'server'\n        ORDER BY members DESC\n        LIMIT 50",
+  "query": "SELECT\n        server_id, server_type AS \"server_type!: ServerType\", members, server_name, admins, s3_icon_key, last_message_at, last_message_id\n        FROM servers\n        WHERE server_id = $1\n        ",
   "describe": {
     "columns": [
       {
@@ -43,10 +43,22 @@
         "ordinal": 5,
         "name": "s3_icon_key",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_message_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_message_id",
+        "type_info": "Int8"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4"
+      ]
     },
     "nullable": [
       false,
@@ -54,8 +66,10 @@
       false,
       false,
       false,
+      true,
+      true,
       true
     ]
   },
-  "hash": "2590a2b5fd5a3ae958444d2c2d964deff13d0fdc06c2b9bf15fa7f2176ee8c11"
+  "hash": "cdcea036ac16d5d6900559bae356824d56d521dc91daafd95970e9754518416e"
 }

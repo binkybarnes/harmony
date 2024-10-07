@@ -94,8 +94,8 @@ pub async fn send_message(
     broadcast_to_server(
         &message_json,
         server_id,
-        websocket_map_state,
-        server_map_state,
+        websocket_map_state.inner().clone(),
+        ServerSessionIdMap(server_map_state.0.clone()),
     )
     .await;
 
